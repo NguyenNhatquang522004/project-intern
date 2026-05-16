@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package common.v1;
+
+// Import Timestamp để xử lý kiểu LocalDateTime của Java
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "com.example.demo.common.grpc";
+option java_outer_classname = "ApprovalHistoryProto";
+
+message ApprovalHistoryResponse {
+  string id = 1;                
+  string leave_request_id = 2; 
+  string approver_email = 3;       
+  int32 level = 4;              
+  string action = 5;            
+  string comment = 6;           
+  google.protobuf.Timestamp created_at = 7; 
+}
+
+// Request để lưu lịch sử duyệt
+message CreateApprovalHistoryRequest {
+  string leave_request_id = 1;
+  string approver_email = 2;
+  int32 level = 3;
+  string action = 4;
+  string comment = 5;
+}
+
+// Định nghĩa Service
+service LeaveApprovalService {
+  rpc RecordApprovalHistory(CreateApprovalHistoryRequest) returns (ApprovalHistoryResponse);
+  
+  rpc GetApprovalHistoriesByLeaveId(GetHistoriesRequest) returns (GetHistoriesResponse);
+}
+
+message GetHistoriesRequest {
+  string leave_request_id = 1;
+}
+
+message GetHistoriesResponse {
+  repeated ApprovalHistoryResponse histories = 1; // Danh sách kết quả
+}

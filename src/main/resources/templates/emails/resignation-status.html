@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông báo trạng thái đơn xin nghỉ việc</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="padding: 30px 40px; background-color: #2c3e50;">
+                            <h2 style="color: #ffffff; margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;">Thông Báo Trạng Thái Đơn</h2>
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="font-size: 16px; color: #333; margin-bottom: 20px;">
+                                Thân chào <strong th:text="${userName}">Nguyễn Nhật Quang</strong>,
+                            </p>
+                            <p style="font-size: 15px; color: #555; line-height: 1.6;">
+                                Chúng tôi gửi email này để cập nhật trạng thái mới nhất cho đơn xin nghỉ việc của bạn đã gửi vào ngày <span style="font-weight: 600;" th:text="${#temporals.format(applicationDate, 'dd/MM/yyyy')}">10/05/2026</span>.
+                            </p>
+
+                            <!-- Status Badge -->
+                            <div style="margin: 30px 0; padding: 20px; border-radius: 6px; text-align: center;"
+                                 th:styleappend="${status == 'APPROVED' ? 'background-color: #e8f5e9; border: 1px solid #c8e6c9;' : 
+                                                 (status == 'REJECTED' ? 'background-color: #ffebee; border: 1px solid #ffcdd2;' : 'background-color: #fff3e0; border: 1px solid #ffe0b2;')}">
+                                
+                                <span style="font-size: 14px; color: #777; display: block; margin-bottom: 5px;">TRẠNG THÁI HIỆN TẠI:</span>
+                                
+                                <strong style="font-size: 20px;"
+                                        th:styleappend="${status == 'APPROVED' ? 'color: #2e7d32;' : 
+                                                         (status == 'REJECTED' ? 'color: #c62828;' : 'color: #ef6c00;')}"
+                                        th:text="${status == 'APPROVED' ? 'ĐÃ PHÊ DUYỆT' : (status == 'REJECTED' ? 'KHÔNG ĐƯỢC CHẤP NHẬN' : 'ĐANG XEM XÉT')}">
+                                    ĐANG XỬ LÝ
+                                </strong>
+                            </div>
+
+                            <!-- Additional Info -->
+                            <div th:if="${status == 'APPROVED'}" style="margin-top: 20px; border-left: 4px solid #2e7d32; padding-left: 15px;">
+                                <p style="font-size: 14px; color: #555;">
+                                    <strong>Ngày làm việc cuối cùng:</strong> <span th:text="${lastWorkingDay}">01/06/2026</span><br>
+                                    Vui lòng liên hệ phòng HR để thực hiện các thủ tục bàn giao công việc.
+                                </p>
+                            </div>
+
+                            <div th:if="${managerNote != null}" style="margin-top: 20px; font-style: italic; color: #777;">
+                                <p style="font-size: 14px;">"Ghi chú từ quản lý: <span th:text="${managerNote}">Lý do nghỉ chưa rõ ràng, cần thảo luận thêm.</span>"</p>
+                            </div>
+
+                            <p style="margin-top: 30px; font-size: 14px; color: #999;">
+                                Đây là email tự động từ hệ thống quản lý nhân sự. Vui lòng không trả lời trực tiếp email này.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding: 20px; background-color: #f8f9fa; border-top: 1px solid #eeeeee;">
+                            <p style="font-size: 12px; color: #aaa; margin: 0;">
+                                &copy; 2026 Your Company Name. All rights reserved.<br>
+                                Ho Chi Minh City, Vietnam.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -1,0 +1,130 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: demo
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Ho_Chi_Minh
+    default-property-inclusion: non_null
+  mail:
+    host: smtp.gmail.com          
+    port: 587                   
+    username: ${MAIL_USERNAME:}   
+    password: ${MAIL_PASSWORD:}    
+    protocol: smtp
+    default-encoding: UTF-8
+
+   
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000  
+          timeout: 5000            
+          writetimeout: 5000   
+  thymeleaf:
+    prefix: classpath:/templates/  
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    
+    cache: ${THYMELEAF_CACHE_ENABLE:false}
+  # 1. Cấu hình PostgreSQL (Source of Truth)
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:camunda}?options=-c%20timezone=Asia/Ho_Chi_Minh
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # Tối ưu Connection Pool cho High-concurrency
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 30000
+      pool-name: HikariCP-LeaveManagement
+
+  jpa:
+    defer-datasource-initialization: true   # Hibernate tạo schema trước, seeder chạy sau
+    hibernate:
+      ddl-auto: create # Tạo mới schema lần đầu; đổi sang update sau khi có dữ liệu
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # Batching để tối ưu hóa việc ghi dữ liệu lớn (Leave Logs)
+        jdbc.batch_size: 25
+        order_inserts: true
+        order_updates: true
+
+  # 2. Cấu hình Redis (Caching & Distributed Lock)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+
+  # 3. Cấu hình Elasticsearch (Search & Audit Log)
+  elasticsearch:
+    uris: http://${ES_HOST:localhost}:9200
+    connection-timeout: 5s
+    socket-timeout: 30s
+
+
+# https://docs.camunda.io/docs/apis-tools/spring-zeebe-sdk/getting-started/
+# https://docs.camunda.io/docs/apis-tools/spring-zeebe-sdk/configuration/
+camunda:
+  client:
+    mode: oidc # Chế độ bảo mật chuẩn doanh nghiệp
+    auth:
+      client-id: orchestration
+      client-secret: secret # Phải khớp với ORCHESTRATION_CLIENT_SECRET trong .env
+      issuer-url: http://localhost:18080/auth/realms/camunda-platform
+    zeebe:
+      gateway-address: localhost:26500
+      security:
+        plaintext: true # Vì chạy local nên không cần SSL/TLS cho gRPC
+# 5. Cấu hình Logging (Tích hợp Logback & ELK Stack)
+logging:
+  level:
+    root: INFO
+    com.nhatquang.demo: DEBUG
+    io.camunda.zeebe.client: WARN
+    org.hibernate.SQL: INFO
+  pattern:
+    # Định dạng Console cho Developer dễ đọc
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+grpc:
+  server:
+    port: 9090
+  client:
+    leavecore: 
+      address: 'static://127.0.0.1:9090'
+      negotiation-type: plaintext
+    leaveinfrastructure:
+      address: 'static://127.0.0.1:9090'
+      negotiation-type: plaintext
+ 
+
+
