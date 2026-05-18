@@ -1,0 +1,109 @@
+# ============================================================
+# application-test.yaml - Profile TEST cho Integration Tests
+# Kết nối đến hệ thống LOCAL thực tế (không dùng embedded/mock)
+# ============================================================
+
+server:
+  port: 8082  # Port khác để không xung đột với app đang chạy
+
+spring:
+  application:
+    name: demo-integration-test
+
+  # Tắt Hibernate DDL auto-create trong test (schema đã có sẵn)
+  jpa:
+    hibernate:
+      ddl-auto: none   # Không tạo lại schema - giữ nguyên dữ liệu seed
+    defer-datasource-initialization: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Kết nối PostgreSQL local (cùng DB với app chính)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/camunda?options=-c%20timezone=Asia/Ho_Chi_Minh&sslmode=disable
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 10000
+      pool-name: HikariCP-Test
+
+  # Redis - kết nối local
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 5
+          max-idle: 2
+          min-idle: 1
+
+  # Elasticsearch - kết nối local
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 5s
+    socket-timeout: 10s
+
+  # Tắt mail trong test (tránh gửi email thật)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: test@test.com
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+  # Tắt Thymeleaf cache
+  thymeleaf:
+    cache: false
+
+# Camunda Zeebe kết nối local cluster (Keycloak OAuth2)
+camunda:
+  client:
+    mode: oidc
+    auth:
+      client-id: orchestration
+      client-secret: secret
+      issuer-url: http://localhost:18080/auth/realms/camunda-platform
+    zeebe:
+      gateway-address: localhost:26500
+      security:
+        plaintext: true
+    # Tắt tự động subscribe worker trong test
+    # (Để test có thể control job activation thủ công)
+    worker:
+      override:
+        enabled: false   # Disable auto job worker trong test context
+
+# gRPC
+grpc:
+  server:
+    port: 9091   # Port khác với app chính (9090)
+  client:
+    leavecore:
+      address: 'static://127.0.0.1:9090'
+      negotiation-type: plaintext
+    leaveinfrastructure:
+      address: 'static://127.0.0.1:9090'
+      negotiation-type: plaintext
+
+# Logging trong test - chỉ log những gì quan trọng
+logging:
+  level:
+    root: WARN
+    com.example.demo.integration: DEBUG
+    io.camunda.zeebe.client: INFO
+    org.awaitility: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{30} - %msg%n"

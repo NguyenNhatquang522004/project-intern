@@ -45,7 +45,7 @@ public class EmailAdapter implements IEmail {
             helper.setTo(request.getTo());
             helper.setSubject(request.getSubject());
             helper.setText(htmlContent, true);
-            helper.setFrom("your-system@domain.com");
+            helper.setFrom(request.getTo());
 
             // 3. Xử lý đính kèm (nếu có)
             if (request.getAttachments() != null) {

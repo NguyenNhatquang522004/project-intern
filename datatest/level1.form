@@ -1,0 +1,179 @@
+{
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.9.0",
+  "exporter": {
+    "name": "Camunda Web Modeler",
+    "version": "65aa273"
+  },
+  "schemaVersion": 19,
+  "id": "Form_zvazcsl",
+  "components": [
+    {
+      "label": "Email",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1y0otlq",
+        "columns": null
+      },
+      "id": "Field_1dpw57g",
+      "key": "Email"
+    },
+    {
+      "label": "Employee ID",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0x7qmcd",
+        "columns": null
+      },
+      "id": "Field_0d3vdd3",
+      "key": "EmployeeID"
+    },
+    {
+      "label": "Full Name",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1uthri6",
+        "columns": null
+      },
+      "id": "Field_0rdcqmm",
+      "key": "FullName"
+    },
+    {
+      "label": "Select Department",
+      "values": [
+        {
+          "label": "IT",
+          "value": "IT"
+        },
+        {
+          "label": "HR",
+          "value": "HR"
+        }
+      ],
+      "type": "select",
+      "layout": {
+        "row": "Row_17tm0yv",
+        "columns": null
+      },
+      "id": "Field_1y14vdz",
+      "key": "Department"
+    },
+    {
+      "label": "Leave Type",
+      "values": [
+        {
+          "label": "ANNUAL",
+          "value": "ANNUAL"
+        },
+        {
+          "label": "SICK",
+          "value": "SICK"
+        },
+        {
+          "label": "UNPAID",
+          "value": "UNPAID"
+        }
+      ],
+      "type": "checklist",
+      "layout": {
+        "row": "Row_0fuhipq",
+        "columns": null
+      },
+      "id": "Field_0pt4wm8",
+      "key": "LeaveType"
+    },
+    {
+      "subtype": "date",
+      "dateLabel": "Start Date",
+      "type": "datetime",
+      "layout": {
+        "row": "Row_109t1cg",
+        "columns": null
+      },
+      "id": "Field_01p58jz",
+      "key": "StartDate"
+    },
+    {
+      "subtype": "date",
+      "dateLabel": "End Date",
+      "type": "datetime",
+      "layout": {
+        "row": "Row_088ikqh",
+        "columns": null
+      },
+      "id": "Field_0a2qwum",
+      "key": "EndDate"
+    },
+    {
+      "label": "leave Session",
+      "values": [
+        {
+          "label": "MORNING",
+          "value": "MORNING"
+        },
+        {
+          "label": "AFTERNOON",
+          "value": "AFTERNOON"
+        },
+        {
+          "label": "ALLDAY",
+          "value": "ALLDAY"
+        }
+      ],
+      "type": "radio",
+      "layout": {
+        "row": "Row_1nd9eai",
+        "columns": null
+      },
+      "id": "Field_0p9gg67",
+      "key": "leaveSession"
+    },
+    {
+      "label": "total days",
+      "type": "number",
+      "layout": {
+        "row": "Row_08gr104",
+        "columns": null
+      },
+      "id": "Field_0714ra5",
+      "key": "totaldays",
+      "readonly": true,
+      "disabled": true
+    },
+    {
+      "label": "reason",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1g4b27e",
+        "columns": null
+      },
+      "id": "Field_0bcejyk",
+      "key": "reason"
+    },
+    {
+      "label": "Status",
+      "values": [
+        {
+          "label": "PENDING",
+          "value": "PENDING"
+        },
+        {
+          "label": "APPROVED",
+          "value": "APPROVED"
+        },
+        {
+          "label": "REJECTED",
+          "value": "REJECTED"
+        }
+      ],
+      "type": "radio",
+      "layout": {
+        "row": "Row_0lsbdbf",
+        "columns": null
+      },
+      "id": "Field_1iey3ev",
+      "key": "Status"
+    }
+  ],
+  "type": "default"
+}

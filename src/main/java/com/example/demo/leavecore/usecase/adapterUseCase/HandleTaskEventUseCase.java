@@ -27,18 +27,20 @@ public class HandleTaskEventUseCase implements IHandleTaskEventUseCase {
     public void handleTaskAssignEvent(String bussinesskey, String emailAssignee) {
         try {
             log.info("handleTaskAssignEvent: {}", bussinesskey);
-            Optional<Employee> employee = repositoryEmployee.findByEmail(emailAssignee);
+            Optional<Employee> employee = repositoryEmployee.findByEmail("demo@example.org");
+            log.info("handleTaskAssignEvent: {}", employee.get().getEmail());
             if (employee.isEmpty()) {
                 throw new RuntimeException("Employee not found");
             }
             Employee assignee = employee.get();
-            Optional<LeaveRequest> leaveRequest = repositoryLeaveRequest.findById(UUID.fromString(bussinesskey));
+            Optional<LeaveRequest> leaveRequest = repositoryLeaveRequest.findByBusinessKey(bussinesskey);
             if (leaveRequest.isEmpty()) {
                 throw new RuntimeException("Leave request not found");
             }
             LeaveRequest leaveRequestEntity = leaveRequest.get();
             leaveRequestEntity.setCurrentAssignee(assignee);
             leaveRequestEntity.setCurrentAssigneeName(assignee.getFullName());
+            log.info("handleTaskAssignEvent: {}", leaveRequestEntity);
             repositoryLeaveRequest.save(leaveRequestEntity);
         } catch (Exception e) {
             log.error("handleTaskAssignEvent: {}", e.getMessage());

@@ -30,7 +30,8 @@ public class MessageCancelWorker {
             @Variable String businessKey,
             @Variable String cancelReason) {
         log.info("--- START: handleUpdateCancel Worker ---");
-        log.info("JobKey: {}, ProcessInstanceKey: {}, businessKey: {}, cancelReason: {}", job.getKey(), job.getProcessInstanceKey(), businessKey, cancelReason);
+        log.info("JobKey: {}, ProcessInstanceKey: {}, businessKey: {}, cancelReason: {}", job.getKey(),
+                job.getProcessInstanceKey(), businessKey, cancelReason);
         try {
             if (businessKey == "" || businessKey == null) {
                 log.info("businessKey is empty, extracting from variables");
@@ -38,8 +39,9 @@ public class MessageCancelWorker {
                 log.info("Extracted Job Variables: {}", variables);
                 LeaveRequestCreateRequest data = LeaveRequestRequest.mapToCreateRequest(variables);
                 log.info("Mapped variables to LeaveRequestCreateRequest: {}", data);
-                
-                log.info("Calling leaveUpdateStatusUseCase.updateStatus with businessKey: {} status: REJECTED", data.businessKey());
+
+                log.info("Calling leaveUpdateStatusUseCase.updateStatus with businessKey: {} status: REJECTED",
+                        data.businessKey());
                 BaseResponse<LeaveRequestResponse> response = leaveUpdateStatusUseCase.updateStatus(data.businessKey(),
                         LeaveRequestStatusEnum.REJECTED);
                 log.info("Received response: {}", response);
@@ -59,8 +61,9 @@ public class MessageCancelWorker {
                 log.info("--- END: handleUpdateCancel Worker successfully completed ---");
                 return;
             }
-            
-            log.info("Calling leaveUpdateStatusUseCase.updateStatus with businessKey: {} status: REJECTED", businessKey);
+
+            log.info("Calling leaveUpdateStatusUseCase.updateStatus with businessKey: {} status: REJECTED",
+                    businessKey);
             BaseResponse<LeaveRequestResponse> response = leaveUpdateStatusUseCase.updateStatus(businessKey,
                     LeaveRequestStatusEnum.REJECTED);
             log.info("Received response: {}", response);

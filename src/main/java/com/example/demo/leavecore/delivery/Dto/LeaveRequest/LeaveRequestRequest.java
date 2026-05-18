@@ -8,6 +8,7 @@ import com.example.demo.common.Enum.LeaveRequestStatusEnum;
 import com.example.demo.common.Enum.LeaveSessionEnum;
 import com.example.demo.common.Enum.LeaveTypeEnum;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import jakarta.validation.constraints.*;
@@ -19,45 +20,66 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class LeaveRequestRequest {
         public static LeaveRequestCreateRequest mapToCreateRequest(Map<String, Object> input) {
-        if (input == null) return null;
+                if (input == null)
+                        return null;
 
-        return LeaveRequestCreateRequest.builder()
-                .businessKey(String.valueOf(input.getOrDefault("BusinessKey", "")))
-                .employeeId(input.get("EmployeeId") != null ? UUID.fromString(input.get("EmployeeId").toString()) : null)
-                
-                // Lưu ý: Camunda trả về String, bạn phải dùng valueOf cho Enum
-                .departmentName(input.get("Department") != null ? 
-                        DeparmentNameEnum.valueOf(input.get("Department").toString()) : null)
-                
-                .leaveType(input.get("Type") != null ? 
-                        LeaveTypeEnum.valueOf(input.get("Type").toString()) : null)
-                
-                // Với Date, cần parse từ String (ISO-8601) nếu Camunda gửi về dạng chuỗi
-                .startDate(input.get("StartDate") != null ? 
-                        LocalDateTime.parse(input.get("StartDate").toString()) : null)
-                
-                .endDate(input.get("EndDate") != null ? 
-                        LocalDateTime.parse(input.get("EndDate").toString()) : null)
-                
-                .fullName(String.valueOf(input.getOrDefault("FullName", "")))
-                .reason(String.valueOf(input.getOrDefault("Reason", "")))
-                
-                .status(input.get("Status") != null ? 
-                        LeaveRequestStatusEnum.valueOf(input.get("Status").toString()) : null)
-                
-                .totalWorkingDays(input.get("TotalWorkingDays") != null && !input.get("TotalWorkingDays").toString().isEmpty()
-                        ? new BigDecimal(input.get("TotalWorkingDays").toString())
-                        : BigDecimal.ZERO)
-                
-                // Mặc định leaveSession là null hoặc lấy từ map nếu có
-                .leaveSession(input.get("LeaveSession") != null ? 
-                        LeaveSessionEnum.valueOf(input.get("LeaveSession").toString()) : null)
-                .build();
-    }
+                return LeaveRequestCreateRequest.builder()
+                                .email(String.valueOf(input.getOrDefault("Email", "")))
+                                .businessKey(String.valueOf(input.getOrDefault("BusinessKey", "")))
+                                .employeeId(input.get("EmployeeID") != null
+                                                ? UUID.fromString(input.get("EmployeeID").toString())
+                                                : null)
+
+                                // Lưu ý: Camunda trả về String, bạn phải dùng valueOf cho Enum
+                                .departmentName(input.get("Department") != null
+                                                ? DeparmentNameEnum.valueOf(input.get("Department").toString())
+                                                : null)
+
+                                .leaveType(input.get("LeaveType") != null
+                                                ? LeaveTypeEnum.valueOf(
+                                                                input.get("LeaveType") instanceof java.util.List
+                                                                                ? ((java.util.List<?>) input
+                                                                                                .get("LeaveType"))
+                                                                                                .get(0).toString()
+                                                                                : input.get("LeaveType").toString()
+                                                                                                .replaceAll("[\\[\\]]",
+                                                                                                                "")
+                                                                                                .split(",")[0].trim())
+                                                : null)
+
+                                // Với Date, cần parse từ String (ISO-8601) nếu Camunda gửi về dạng chuỗi
+                                .startDate(input.get("StartDate") != null
+                                                ? LocalDate.parse(input.get("StartDate").toString()).atStartOfDay()
+                                                : null)
+
+                                .endDate(input.get("EndDate") != null
+                                                ? LocalDate.parse(input.get("EndDate").toString()).atStartOfDay()
+                                                : null)
+
+                                .fullName(String.valueOf(input.getOrDefault("FullName", "")))
+                                .reason(String.valueOf(input.getOrDefault("Reason", "")))
+
+                                .status(input.get("Status") != null
+                                                ? LeaveRequestStatusEnum.valueOf(input.get("Status").toString().trim().toUpperCase())
+                                                : null)
+
+                                .totalWorkingDays(input.get("TotalWorkingDays") != null
+                                                && !input.get("TotalWorkingDays").toString().isEmpty()
+                                                                ? new BigDecimal(input.get("TotalWorkingDays")
+                                                                                .toString())
+                                                                : BigDecimal.ZERO)
+
+                                // Mặc định leaveSession là null hoặc lấy từ map nếu có
+                                .leaveSession(input.get("leaveSession") != null
+                                                ? LeaveSessionEnum.valueOf(input.get("leaveSession").toString())
+                                                : null)
+                                .build();
+        }
+
         @Builder
         public record LeaveRequestCreateRequest(
                         @NotBlank(message = "Business Key không được để trống") String businessKey,
-
+                        @NotBlank(message = "Email không được để trống") String email,
                         @NotNull(message = "ID Nhân viên không được để trống") UUID employeeId,
                         @NotNull(message = "Department hông được để trống ") DeparmentNameEnum departmentName,
                         @NotNull(message = "ID Loại nghỉ không được để trống") LeaveTypeEnum leaveType,

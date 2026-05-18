@@ -67,16 +67,18 @@ public class LeaveValidateRequestUseCase implements ILeaveValidateRequestUseCase
                         .build();
             }
             List<LeaveBalance> leaveBalances = repositoryLeaveBalance.findByEmployee_IdAndYear(request.employeeId(),
-                    request.startDate().getYear());
-            if (leaveBalances.isEmpty() || leaveBalances.size() > 1
-                    || leaveBalances.get(0).getEmployee().getId() != request.employeeId()) {
+                    2025);
+            log.info("Leave balances: {}", leaveBalances);
+            if (leaveBalances.isEmpty() || leaveBalances.size() > 1) {
                 return BaseResponse.<LeaveValidRespones>builder().code("400").message("Leave balance not found")
                         .data(LeaveValidRespones.builder().isvalid(false).build())
                         .build();
             }
             LeaveBalance leaveBalance = leaveBalances.get(0);
+            log.info("Leave balance: {}", leaveBalance);
             BigDecimal requestTotalDays = calculateWorkingDays(request.startDate(), request.endDate(),
                     request.leaveSession());
+            log.info("Request total days: {}", requestTotalDays);
             if (requestTotalDays.compareTo(BigDecimal.ZERO) <= 1) {
                 if (requestTotalDays.compareTo(BigDecimal.ZERO) <= 0) {
                     return BaseResponse.<LeaveValidRespones>builder().code("400")
@@ -102,6 +104,7 @@ public class LeaveValidateRequestUseCase implements ILeaveValidateRequestUseCase
             entity.setTotalWorkingDays(requestTotalDays);
             entity.setCreatedAt(LocalDateTime.now());
             entity.setUpdatedAt(LocalDateTime.now());
+            entity.setReason(request.reason());
             repositoryLeaveRequest.save(entity);
             leaveBalance.setPendingDays(leaveBalance.getPendingDays().add(requestTotalDays));
             repositoryLeaveBalance.save(leaveBalance);

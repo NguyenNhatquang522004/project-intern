@@ -32,19 +32,9 @@
         <discardingThreshold>0</discardingThreshold>
         <neverBlock>true</neverBlock>
     </appender>
+    <!-- Always write to both Console and Logstash File for ELK integration -->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
+        <appender-ref ref="ASYNC_LOGSTASH" />
     </root>
-    <springProfile name="dev | local">
-        <root level="INFO">
-            <appender-ref ref="CONSOLE" />
-        </root>
-    </springProfile>
-
-    <springProfile name="prod">
-        <root level="INFO">
-            <appender-ref ref="ASYNC_LOGSTASH" />
-            <appender-ref ref="CONSOLE" />
-        </root>
-    </springProfile>
 </configuration>

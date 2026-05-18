@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class LeaveDeductBalanceWorker {
     private final ILeaveDeductBalanceUseCase leaveDeductBalanceUseCase;
-    
+
     @JobWorker(type = "deduct-balance-task")
     public void deductBalance(final JobClient client, final ActivatedJob job) {
         log.info("--- START: deductBalance Worker ---");
@@ -31,16 +31,17 @@ public class LeaveDeductBalanceWorker {
         try {
             Map<String, Object> variables = job.getVariablesAsMap();
             log.info("Extracted Job Variables: {}", variables);
-            
+
             LeaveRequestCreateRequest data = LeaveRequestRequest.mapToCreateRequest(variables);
             log.info("Mapped variables to LeaveRequestCreateRequest: {}", data);
-            
+
             log.info("Calling leaveDeductBalanceUseCase.deductBalance with businessKey: {}", data.businessKey());
             BaseResponse<LeaveRequestResponse> response = leaveDeductBalanceUseCase.deductBalance(data.businessKey());
             log.info("Received response from leaveDeductBalanceUseCase: {}", response);
-            
+
             if (response.getCode() != "200") {
-                log.warn("Deduct balance failed. Code: {}, Message: {}. Throwing BPMN Error.", response.getCode(), response.getMessage());
+                log.warn("Deduct balance failed. Code: {}, Message: {}. Throwing BPMN Error.", response.getCode(),
+                        response.getMessage());
                 client.newThrowErrorCommand(job.getKey())
                         .errorCode(response.getCode())
                         .errorMessage(response.getMessage())
@@ -51,7 +52,7 @@ public class LeaveDeductBalanceWorker {
             final Map<String, Object> outputVariables = new HashMap<String, Object>();
             outputVariables.put("Message", "Leave request approved and balance deducted successfully");
             log.info("Setting output variables: {}", outputVariables);
-            
+
             client.newCompleteCommand(job.getKey()).variables(outputVariables).send().join();
             log.info("--- END: deductBalance Worker successfully completed ---");
         } catch (Exception e) {

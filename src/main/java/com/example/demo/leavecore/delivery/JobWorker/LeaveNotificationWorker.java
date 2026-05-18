@@ -27,19 +27,20 @@ public class LeaveNotificationWorker {
         try {
             Map<String, Object> variables = job.getVariablesAsMap();
             log.info("Extracted Job Variables: {}", variables);
-            
+
             LeaveRequestCreateRequest data = LeaveRequestRequest.mapToCreateRequest(variables);
             log.info("Mapped variables to LeaveRequestCreateRequest: {}", data);
-            
+
             String message = variables.get("message") != null ? variables.get("message").toString() : "";
             log.info("Extracted message from variables: '{}'", message);
-            
-            log.info("Calling leaveNotificationUseCase.sendLeaveStatusUpdateEmail with employeeId: {}, status: {}, totalWorkingDays: {}, message: {}", 
-                     data.employeeId(), data.status(), data.totalWorkingDays(), message);
-            leaveNotificationUseCase.sendLeaveStatusUpdateEmail(data.employeeId().toString(), data.status().toString(),
+
+            log.info(
+                    "Calling leaveNotificationUseCase.sendLeaveStatusUpdateEmail with employeeId: {}, status: {}, totalWorkingDays: {}, message: {}",
+                    data.employeeId(), data.status(), data.totalWorkingDays(), message);
+            leaveNotificationUseCase.sendLeaveStatusUpdateEmail(data.email(), data.status().toString(),
                     data.totalWorkingDays().toString(), message);
             log.info("Successfully sent leave status update email.");
-            
+
             client.newCompleteCommand(job.getKey()).send().join();
             log.info("--- END: sendLeaveStatusUpdateEmail Worker successfully completed ---");
         } catch (Exception e) {

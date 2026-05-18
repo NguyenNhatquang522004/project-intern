@@ -36,67 +36,76 @@ public class LeaveValidateRequestWorker {
     @GrpcClient("leaveinfrastructure")
     private LeaveApprovalServiceGrpc.LeaveApprovalServiceBlockingStub leaveStub;
 
-    @JobWorker(type = "validate-request")
-    public void validateRequest(final JobClient client, final ActivatedJob job) {
+    @JobWorker(type = "validate-request", timeout = 60000)
+    public Map<String, Object> validateRequest(final JobClient client, final ActivatedJob job) {
         log.info("--- START: validateRequest Worker ---");
+        final Map<String, Object> outputVariables = new HashMap<String, Object>();
         log.info("JobKey: {}, ProcessInstanceKey: {}", job.getKey(), job.getProcessInstanceKey());
         try {
             Map<String, Object> variables = job.getVariablesAsMap();
             log.info("Extracted Job Variables: {}", variables);
-            
+
             LeaveRequestCreateRequest data = LeaveRequestRequest.mapToCreateRequest(variables);
             log.info("Mapped variables to LeaveRequestCreateRequest: {}", data);
-            
+
             log.info("Calling leaveValidateRequestUseCase.validate");
             BaseResponse<LeaveValidRespones> response = leaveValidateRequestUseCase.validate(data);
             log.info("Received response: {}", response);
 
-            if (!response.getData().getIsvalid()) {
-                log.warn("Validation failed. Code: {}, Message: {}. Throwing Error command.", response.getCode(), response.getMessage());
+            if (response.getData().getIsvalid() == false) {
+                log.warn("Validation failed. Code: {}, Message: {}. Throwing Error command.", response.getCode(),
+                        response.getMessage());
                 client.newThrowErrorCommand(job.getKey())
                         .errorCode(response.getCode())
                         .errorMessage(response.getMessage())
                         .send()
                         .join();
-                return;
+                return outputVariables;
             }
-            final Map<String, Object> outputVariables = new HashMap<String, Object>();
+
+            log.info("Prepared outputVariables: {}", outputVariables);
+
+            // log.info("Preparing CreateApprovalHistoryRequest");
+            // CreateApprovalHistoryRequest request =
+            // CreateApprovalHistoryRequest.newBuilder()
+            // .setAction("validate-request")
+            // .setLeaveRequestId(response.getData().getBusinessKey())
+            // .setApproverEmail("")
+            // .setLevel(0)
+            // .setComment("Validate leave request").build();
+            // log.info("Calling leaveStub.recordApprovalHistory with request: {}",
+            // request);
+            // ApprovalHistoryResponse respone = leaveStub.recordApprovalHistory(request);
+            // log.info("Received approval history response: {}", respone);
+
+            // if (respone.getLeaveRequestId().equals(request.getLeaveRequestId())) {
+            // log.info("Approval history recorded successfully");
+            // } else {
+            // log.error("Error recording approval history");
+            // client.newThrowErrorCommand(job.getKey())
+            // .errorCode("APPROVAL_HISTORY_ERROR")
+            // .errorMessage("Error recording approval history")
+            // .send()
+            // .join();
+            // return outputVariables;
+            // }
+            log.info("Setting output variables and completing job: {}", job.getKey());
+            log.info("sss" + response.getData().getIsvalid());
             outputVariables.put("isValid", response.getData().getIsvalid());
+            outputVariables.put("totaldays", response.getData().getTotalWorkingDays());
             outputVariables.put("TotalWorkingDays", response.getData().getTotalWorkingDays());
             outputVariables.put("BusinessKey", response.getData().getBusinessKey());
             outputVariables.put("Message", response.getData().getMessage());
-            log.info("Prepared outputVariables: {}", outputVariables);
-            
-            log.info("Preparing CreateApprovalHistoryRequest");
-            CreateApprovalHistoryRequest request = CreateApprovalHistoryRequest.newBuilder()
-                    .setAction("validate-request")
-                    .setLeaveRequestId(response.getData().getBusinessKey())
-                    .setApproverEmail("")
-                    .setLevel(0)
-                    .setComment("Validate leave request").build();
-            log.info("Calling leaveStub.recordApprovalHistory with request: {}", request);
-            ApprovalHistoryResponse respone = leaveStub.recordApprovalHistory(request);
-            log.info("Received approval history response: {}", respone);
-            
-            if (respone.getLeaveRequestId().equals(request.getLeaveRequestId())) {
-                log.info("Approval history recorded successfully");
-            } else {
-                log.error("Error recording approval history");
-                client.newThrowErrorCommand(job.getKey())
-                        .errorCode("APPROVAL_HISTORY_ERROR")
-                        .errorMessage("Error recording approval history")
-                        .send()
-                        .join();
-                return;
-            }
-            log.info("Setting output variables and completing job: {}", job.getKey());
+            log.info("Output variables after: {}", outputVariables);
             client.newCompleteCommand(job.getKey()).variables(outputVariables).send().join();
             log.info("--- END: validateRequest Worker successfully completed ---");
+            return outputVariables;
         } catch (Exception e) {
             log.error("Exception occurred in validateRequest Worker: {}", e.getMessage(), e);
             client.newFailCommand(job.getKey()).retries(job.getRetries() - 1).errorMessage(e.getMessage())
                     .send().join();
             log.info("Failed job: {} with remaining retries: {}", job.getKey(), job.getRetries() - 1);
+            return outputVariables;
         }
 
     }

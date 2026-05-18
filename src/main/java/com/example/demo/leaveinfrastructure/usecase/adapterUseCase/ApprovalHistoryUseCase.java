@@ -18,16 +18,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class ApprovalHistoryUseCase implements IApprovalHistoryUseCase {
-    private final IRepositoryApprovalHistory approvalHistoryRepository;
+        private final IRepositoryApprovalHistory approvalHistoryRepository;
 
     @Override
     public void recordApprovalHistory(CreateApprovalHistoryRequest request) {
         try {
+            String uuidPart = request.getLeaveRequestId().substring(request.getLeaveRequestId().lastIndexOf("-") + 1);
+            String standardUuidString = uuidPart.toLowerCase() + "-0000-0000-0000-000000000000";
+            UUID uuid = UUID.fromString(standardUuidString);
             Optional<ApprovalHistory> approvalHistory = approvalHistoryRepository
-                    .findByLeaveRequestId(UUID.fromString(request.getLeaveRequestId()));
+                    .findByLeaveRequestId(uuid);
             if (approvalHistory.isEmpty()) {
                 ApprovalHistory approvalHistoryEntity = ApprovalHistory.builder()
-                        .leaveRequestId(UUID.fromString(request.getLeaveRequestId()))
+                        .leaveRequestId(uuid)
                         .approverEmail(request.getApproverEmail())
                         .level(request.getLevel())
                         .action(request.getAction())
