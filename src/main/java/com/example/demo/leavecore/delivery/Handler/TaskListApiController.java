@@ -51,6 +51,12 @@ public class TaskListApiController {
             @RequestParam(value = "filter", defaultValue = "ALL_OPEN") String filter,
             @AuthenticationPrincipal Jwt jwt) {
         String username = getUsernameFromJwt(jwt);
+        if (username == null) {
+            return BaseResponse.<List<TaskItemDto>>builder()
+                    .code("401")
+                    .message("Unauthorized")
+                    .build();
+        }
         log.info("--- [API] Fetching tasks for filter: {} and user: {} ---", filter, username);
         try {
             List<Map<String, Object>> rawTasks;
@@ -75,7 +81,8 @@ public class TaskListApiController {
                 String id = (String) t.get("id");
                 String name = (String) t.get("name");
                 String processId = (String) t.get("processName");
-                if (processId == null) processId = (String) t.get("processDefinitionKey");
+                if (processId == null)
+                    processId = (String) t.get("processDefinitionKey");
                 String processInstanceKey = (String) t.get("processInstanceKey");
                 String processDefinitionKey = (String) t.get("processDefinitionKey");
                 String creationTime = (String) t.get("creationTime");
@@ -86,7 +93,8 @@ public class TaskListApiController {
                 // Fetch variables for each task
                 Map<String, Object> variables = camundaTasklistService.getTaskVariables(id);
 
-                tasks.add(new TaskItemDto(id, name, processId, processInstanceKey, processDefinitionKey, creationTime, assignee, taskState, formId, variables));
+                tasks.add(new TaskItemDto(id, name, processId, processInstanceKey, processDefinitionKey, creationTime,
+                        assignee, taskState, formId, variables));
             }
 
             return BaseResponse.<List<TaskItemDto>>builder()
@@ -105,12 +113,12 @@ public class TaskListApiController {
 
     private String getUsernameFromJwt(Jwt jwt) {
         if (jwt == null) {
-            return "demo_manager@company.com"; // Fallback an toàn cho test sandbox
+            return null;// Fallback an toàn cho test sandbox
         }
-        String username = jwt.getClaimAsString("preferred_username");
+        String username = jwt.getClaimAsString("Email");
         if (username == null) {
-            username = jwt.getClaimAsString("email");
+            return null;
         }
-        return username != null ? username : "demo_manager@company.com";
+        return username;
     }
 }

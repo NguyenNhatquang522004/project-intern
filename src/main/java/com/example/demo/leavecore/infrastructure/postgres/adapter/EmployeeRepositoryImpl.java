@@ -34,4 +34,9 @@ public class EmployeeRepositoryImpl implements IRepositoryEmployee {
     public Optional<Employee> findByEmail(String email) {
         return repository.findByEmail(email);
     }
+
+    @Override
+    public void DeleteEmployeeByEmail(String email) {
+        repository.deleteByEmail(email);
+    }
 }

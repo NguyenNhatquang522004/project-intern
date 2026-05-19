@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.example.demo.common.Enum.AccountStatusEnum;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +13,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "employees", indexes = {
-    @Index(name = "idx_emp_department", columnList = "department_id"),
-    @Index(name = "idx_emp_manager", columnList = "manager_id"),
-    @Index(name = "idx_emp_status", columnList = "status")
+        @Index(name = "idx_emp_department", columnList = "department_id"),
+        @Index(name = "idx_emp_manager", columnList = "manager_id"),
+        @Index(name = "idx_emp_status", columnList = "status")
 })
 @Getter
 @Setter
@@ -31,6 +33,21 @@ public class Employee {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @Column(name = "password", nullable = false)
+    private String password;
+
+    @Column(name = "OTP", nullable = true)
+    private String codeOTP;
+
+    @Column(name = "OTP_EXPIRY_DATE", nullable = true)
+    private LocalDateTime codeOtpExpiryDate;
+
+    @Column(name = "count_resend_email")
+    private Integer countResendEmail;
+
+    @Column(name = "count_fail_otp")
+    private Integer countFailOtp;
+
     @Column(name = "position_level", nullable = false)
     private Integer positionLevel;
 
@@ -42,9 +59,10 @@ public class Employee {
     @JoinColumn(name = "manager_id")
     private Employee manager;
 
-    @Column(name = "status", length = 20)
+    @Column(name = "account_status", length = 20)
     @Builder.Default
-    private String status = "ACTIVE";
+    @Enumerated(EnumType.STRING)
+    private AccountStatusEnum status = AccountStatusEnum.INACTIVE;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

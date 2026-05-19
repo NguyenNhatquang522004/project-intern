@@ -65,6 +65,7 @@ public class DatabasePostgres {
         properties.put("hibernate.order_updates", true);
         properties.put("hibernate.show_sql", false);
         properties.put("hibernate.format_sql", true);
+        properties.put("hibernate.hbm2ddl.auto", "update");
         em.setJpaPropertyMap(properties);
 
         return em;

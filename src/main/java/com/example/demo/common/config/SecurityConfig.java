@@ -10,6 +10,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -26,7 +28,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Spring Security 6 Config làm OAuth2 Resource Server để xác thực JWT Access Token từ Keycloak.
+ * Spring Security 6 Config làm OAuth2 Resource Server để xác thực JWT Access
+ * Token từ Keycloak.
  * Bảo vệ toàn bộ tài nguyên API của dự án với các Best Practice về bảo mật.
  */
 @Configuration
@@ -35,62 +38,53 @@ import java.util.stream.Stream;
 public class SecurityConfig {
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(10);
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Cấu hình CORS
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // 2. Vô hiệu hóa CSRF vì hệ thống sử dụng stateless JWT token
-            .csrf(AbstractHttpConfigurer::disable)
-            // 3. Quản lý session ở chế độ STATELESS
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // 4. Phân quyền truy cập các Endpoint
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/leave-requests/submit").permitAll() // Đơn gửi công khai
-                .requestMatchers("/api/v1/public/**").permitAll()
-                .anyRequest().authenticated() // Tất cả các API còn lại đều phải đăng nhập bằng Token
-            )
-            // 5. Cấu hình JWT Resource Server
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-            );
+                // 1. Cấu hình CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // 2. Vô hiệu hóa CSRF vì hệ thống sử dụng stateless JWT token
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/leave-requests/submit").permitAll()
+                        .requestMatchers("/api/v1/public/**").permitAll()
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
     }
 
-    /**
-     * Converter bóc tách Roles từ Keycloak JWT claims và chuyển đổi thành GrantedAuthority của Spring Security.
-     * Hỗ trợ tìm kiếm cả trong realm_access.roles và resource_access.{client_id}.roles
-     */
+
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        
-        // Trình chuyển đổi mặc định để lấy các SCOPE_ từ JWT
+
+        // Trình chuyển đổi mặc định để lấy các SCOPE_ từ JWT   
         JwtGrantedAuthoritiesConverter defaultAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        
+
         converter.setJwtGrantedAuthoritiesConverter(new Converter<Jwt, Collection<GrantedAuthority>>() {
             @Override
             public Collection<GrantedAuthority> convert(Jwt jwt) {
-                // 1. Lấy các quyền hạn dạng SCOPE_ mặc định
                 Collection<GrantedAuthority> defaultAuthorities = defaultAuthoritiesConverter.convert(jwt);
                 if (defaultAuthorities == null) {
                     defaultAuthorities = Collections.emptyList();
                 }
-
-                // 2. Trích xuất Realm-level Roles từ trường 'realm_access.roles'
                 Collection<GrantedAuthority> realmRoles = extractRealmRoles(jwt);
 
-                // 3. Trích xuất Client-level Roles từ trường 'resource_access'
-                Collection<GrantedAuthority> clientRoles = extractClientRoles(jwt);
+                Collection<GrantedAuthority> clientRoles = extractClientRoles(jwt); 
 
-                // Gộp tất cả các Authority lại với nhau
                 return Stream.concat(
                         Stream.concat(defaultAuthorities.stream(), realmRoles.stream()),
-                        clientRoles.stream()
-                ).collect(Collectors.toSet());
+                        clientRoles.stream()).collect(Collectors.toSet());
             }
         });
-        
+
         return converter;
     }
 
@@ -100,7 +94,7 @@ public class SecurityConfig {
         if (realmAccess == null || !realmAccess.containsKey("roles")) {
             return Collections.emptyList();
         }
-        
+
         List<String> roles = (List<String>) realmAccess.get("roles");
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))

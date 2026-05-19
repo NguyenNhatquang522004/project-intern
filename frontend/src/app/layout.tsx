@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SessionProvider } from 'next-auth/react';
 import { Toaster } from 'sonner';
 import '@/app/globals.css';
 
@@ -20,22 +21,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-slate-950" suppressHydrationWarning={true}>
-        <QueryClientProvider client={queryClient}>
-          {children}
-          <Toaster
-            position="top-right"
-            theme="dark"
-            toastOptions={{
-              style: {
-                background: '#0f172a',
-                border: '1px solid #1e293b',
-                color: '#f8fafc',
-              }
-            }}
-          />
-        </QueryClientProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-slate-950" >
+        <SessionProvider>
+          <QueryClientProvider client={queryClient}>
+            {children}
+            <Toaster
+              position="top-right"
+              theme="dark"
+              toastOptions={{
+                style: {
+                  background: '#0f172a',
+                  border: '1px solid #1e293b',
+                  color: '#f8fafc',
+                }
+              }}
+            />
+          </QueryClientProvider>
+        </SessionProvider>
       </body>
     </html>
   );

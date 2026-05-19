@@ -9,4 +9,5 @@ public interface IRepositoryEmployee {
     Optional<Employee> findById(UUID id);
     void deleteById(UUID id);
     Optional<Employee> findByEmail(String email);
+    void DeleteEmployeeByEmail(String email);
 }

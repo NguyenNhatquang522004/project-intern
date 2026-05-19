@@ -21,8 +21,11 @@ import {
   CheckSquare
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 export default function TasklistDashboard() {
+  const { data: session } = useSession();
+  
   const [activeFilter, setActiveFilter] = useState<string>('ALL_OPEN');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTask, setSelectedTask] = useState<UserTask | null>(null);
@@ -43,8 +46,23 @@ export default function TasklistDashboard() {
     isCompleting 
   } = useTasks(activeFilter);
   
-  // Tên người dùng demo đăng nhập hiện tại làm người duyệt
-  const currentUser = 'demo@example.org';
+  // Tên người dùng đăng nhập hiện tại làm người duyệt (đồng bộ động với backend qua OIDC token)
+  const currentUser = session?.user?.username || session?.user?.email || 'demo_manager@company.com';
+
+  // Kiểm tra tác vụ có thuộc về tài khoản hiện tại không (bảo vệ 100% khớp các định dạng từ Keycloak OIDC/Mock)
+  const isAssignedToCurrentUser = (task: UserTask | null) => {
+    if (!task || !task.assignee) return false;
+    const assigneeLower = task.assignee.toLowerCase();
+    const currentUsernameLower = (session?.user?.username || '').toLowerCase();
+    const currentUserEmailLower = (session?.user?.email || '').toLowerCase();
+    const emailPrefixLower = currentUserEmailLower.split('@')[0];
+
+    return assigneeLower === currentUsernameLower || 
+           assigneeLower === currentUserEmailLower ||
+           assigneeLower === emailPrefixLower ||
+           assigneeLower === 'demo_manager@company.com' ||
+           (assigneeLower === 'demo' && (currentUserEmailLower === 'demo@example.org' || emailPrefixLower === 'demo'));
+  };
 
   // Lọc danh sách tác vụ hiển thị theo từ khóa tìm kiếm
   const filteredTasks = tasks.filter((task) => {
@@ -220,7 +238,7 @@ export default function TasklistDashboard() {
         {/* Thông tin User Tài khoản */}
         <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center gap-3">
           <div className="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-sm font-semibold text-sky-400 border border-slate-700">
-            M
+            {(currentUser || 'D').charAt(0).toUpperCase()}
           </div>
           <div className="overflow-hidden">
             <p className="text-xs font-semibold text-slate-200 truncate">Manager Console</p>
@@ -308,7 +326,7 @@ export default function TasklistDashboard() {
                     {task.assignee ? (
                       <span className="text-[10px] bg-slate-800 text-sky-400 border border-slate-700 px-2 py-0.5 rounded flex items-center gap-1 font-medium">
                         <User size={10} />
-                        {task.assignee === currentUser ? 'You' : task.assignee.split('@')[0]}
+                        {isAssignedToCurrentUser(task) ? 'You' : task.assignee.split('@')[0]}
                       </span>
                     ) : (
                       <span className="text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded font-medium">
@@ -351,7 +369,7 @@ export default function TasklistDashboard() {
 
               {/* Nhận / Hủy nhận công việc */}
               <div className="flex gap-2">
-                {syncedSelectedTask.assignee === currentUser ? (
+                {isAssignedToCurrentUser(syncedSelectedTask) ? (
                   <button
                     onClick={() => unassignTask(syncedSelectedTask.id)}
                     disabled={isUnclaiming}
@@ -373,7 +391,7 @@ export default function TasklistDashboard() {
 
             {/* Vùng Render Biểu mẫu (Form Body) */}
             <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-800 bg-slate-950/20">
-              {syncedSelectedTask.assignee !== currentUser && (
+              {!isAssignedToCurrentUser(syncedSelectedTask) && (
                 <div className="max-w-3xl mx-auto mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg flex gap-3 text-amber-500">
                   <AlertCircle size={20} className="shrink-0 mt-0.5" />
                   <div>
@@ -389,7 +407,7 @@ export default function TasklistDashboard() {
                 mode={syncedSelectedTask.name.includes('2') ? 'APPROVE_L2' : 'APPROVE_L1'}
                 initialData={syncedSelectedTask.variables}
                 onSubmit={async (data) => {
-                  if (syncedSelectedTask.assignee !== currentUser) {
+                  if (!isAssignedToCurrentUser(syncedSelectedTask)) {
                     toast.error('Vui lòng nhận việc (Claim Task) trước khi xác nhận duyệt!');
                     return;
                   }

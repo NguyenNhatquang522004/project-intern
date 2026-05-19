@@ -22,6 +22,12 @@ public class EmployeeRequest {
 
         UUID managerId,
 
+
+        String password ,
+        
+        String groupID,
+
+        
         String status
     ) {}
 

@@ -35,17 +35,19 @@ services :
       - "9200:9200"
     networks:
       - camunda_network
-  # kibana:
-  #   image: docker.elastic.co/kibana/kibana:7.17.14
-  #   container_name: camunda-kibana
-  #   environment:
-  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  #   ports:
-  #     - "5601:5601"
-  #   networks:
-  #     - camunda_network
-  #   depends_on:
-  #     - elasticsearch
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.14
+    container_name: camunda-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    volumes:
+      - ../elk/kibana/node.options:/usr/share/kibana/config/node.options:ro
+    networks:
+      - camunda_network
+    depends_on:
+      - elasticsearch
   # redis:
   #   image: redis:6.2.7
   #   container_name: camunda-redis

@@ -1,6 +1,5 @@
 server:
   port: 8081
-
 spring:
   application:
     name: demo
@@ -48,9 +47,9 @@ spring:
       pool-name: HikariCP-LeaveManagement
 
   jpa:
-    defer-datasource-initialization: true   # Hibernate tạo schema trước, seeder chạy sau
+    defer-datasource-initialization: true   
     hibernate:
-      ddl-auto: create # Tạo mới schema lần đầu; đổi sang update sau khi có dữ liệu
+      ddl-auto: update 
     show-sql: false
     properties:
       hibernate:
@@ -130,4 +129,9 @@ grpc:
       negotiation-type: plaintext
  
 
-
+keycloak:
+  admin:
+    server-url: http://localhost:18080
+    realm: camunda-platform
+    client-id: cammuda-client
+    client-secret: sl9EiYyFEvzqsJonqhLlreJM2kbovtjp
