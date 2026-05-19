@@ -1,5 +1,6 @@
 package com.example.demo.common.config;
 
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -26,6 +27,9 @@ public class KeycloakAdminConfig {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
                 .realm(realm)
+                .resteasyClient(((ResteasyClientBuilder) ResteasyClientBuilder.newBuilder())
+                        .register(new KeycloakJacksonConfig()) // <-- ĐĂNG KÝ VÁ LỖI Ở ĐÂY
+                        .build())
                 .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
                 .clientId(clientId)
                 .clientSecret(clientSecret)

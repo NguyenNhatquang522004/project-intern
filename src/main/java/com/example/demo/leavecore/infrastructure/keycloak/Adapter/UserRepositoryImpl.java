@@ -3,6 +3,7 @@ package com.example.demo.leavecore.infrastructure.keycloak.Adapter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -21,8 +22,10 @@ import com.example.demo.common.Dto.BaseResponse;
 import com.example.demo.leavecore.delivery.Dto.Employee.EmployeeRequest.EmployeeCreateRequest;
 import com.example.demo.leavecore.delivery.Dto.auth.LoginResponse;
 import com.example.demo.leavecore.delivery.Dto.auth.AuthRequest.LoginRequest;
-import com.example.demo.leavecore.delivery.Dto.auth.AuthRequest.RegisterStep1Request;
-import com.example.demo.leavecore.delivery.Dto.auth.AuthRequest.ResetPasswordRequest;
+import com.example.demo.leavecore.delivery.Dto.auth.RegisterStep1Request;
+import com.example.demo.leavecore.delivery.Dto.auth.ResetPasswordRequest;
+import com.example.demo.leavecore.delivery.Dto.keycloak.GroupResponse;
+import com.example.demo.leavecore.delivery.Dto.keycloak.UserResponse;
 import com.example.demo.leavecore.domain.IRepository.IRepositoryUser;
 
 import org.springframework.web.reactive.function.BodyInserters;
@@ -101,40 +104,54 @@ public class UserRepositoryImpl implements IRepositoryUser {
 
     public BaseResponse<String> CreateUser(RegisterStep1Request request) {
         try {
-
+            UUID userid = UUID.randomUUID();
             UserRepresentation user = new UserRepresentation();
-            user.setUsername(request.email());
-            user.setEmail(request.email());
-            user.setFirstName(request.fullName());
-            user.setLastName(request.fullName());
+            user.setId(userid.toString());
+            user.setUsername(request.getEmail());
+            user.setEmail(request.getEmail());
+            user.setFirstName(request.getFullName());
+            user.setLastName(request.getFullName());
             user.setEnabled(false);
             user.setEmailVerified(false);
             Map<String, List<String>> attributes = new HashMap<>();
-            attributes.put("Email", java.util.Collections.singletonList(request.email()));
-            attributes.put("FullName", java.util.Collections.singletonList(request.fullName()));
+            attributes.put("Email", java.util.Collections.singletonList(request.getEmail()));
+            attributes.put("FullName", java.util.Collections.singletonList(request.getFullName()));
             user.setAttributes(attributes);
             CredentialRepresentation credential = new CredentialRepresentation();
-            credential.setValue(request.password());
+            credential.setValue(request.getPassword());
             credential.setTemporary(false);
             user.setCredentials(java.util.Collections.singletonList(credential));
-            BaseResponse<GroupRepresentation> GetGroupById = GetGroupById(request.groupID());
-            if (GetGroupById.getCode() != "200") {
-                return BaseResponse.<String>builder().code("400").data("")
-                        .message(GetGroupById.getMessage() + "" + " không tìm thấy group ")
-                        .build();
-            }
-            BaseResponse<String> AddUserGroup = AddUserGroup(request.groupID(), user.getId());
-            if (AddUserGroup.getCode() != "200") {
-                return BaseResponse.<String>builder().code("400").data("")
-                        .message(AddUserGroup.getMessage() + "" + " không tạo thành công ")
-                        .build();
-            }
             Response response = getRealmResource().users().create(user);
+            log.info("response: {}", response);
             if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
                 return BaseResponse.<String>builder().code("400").data("")
                         .message(response.getStatus() + "" + " không tạo thành công ")
                         .build();
             }
+
+            BaseResponse<GroupResponse> GetGroupById = GetGroupById(request.getGroupID());
+            log.info("GetGroupById: {}", GetGroupById);
+            if (!"200".equals(GetGroupById.getCode())) {
+                return BaseResponse.<String>builder().code("400").data("")
+                        .message(GetGroupById.getMessage() + "" + " không tìm thấy group ")
+                        .build();
+            }
+            BaseResponse<UserResponse> GetUserByUserId = GetUserByEmail(request.getEmail());
+            log.info("GetUserByUserId: {}", GetUserByUserId);
+            if (!"200".equals(GetUserByUserId.getCode())) {
+                return BaseResponse.<String>builder().code("400").data("")
+                        .message(GetUserByUserId.getMessage() + "" + " không tìm thấy user ")
+                        .build();
+            }
+            BaseResponse<String> AddUserGroup = AddUserGroup(GetGroupById.getData().getId(),
+                    GetUserByUserId.getData().getId());
+            log.info("AddUserGroup: {}", AddUserGroup);
+            if (!"200".equals(AddUserGroup.getCode())) {
+                return BaseResponse.<String>builder().code("400").data("")
+                        .message(AddUserGroup.getMessage() + "" + " không tạo thành công ")
+                        .build();
+            }
+
             return BaseResponse.<String>builder().code("200").data("").message("thành công ").build();
         } catch (Exception e) {
             return BaseResponse.<String>builder().code("400").data("").message(e.getMessage()).build();
@@ -143,9 +160,12 @@ public class UserRepositoryImpl implements IRepositoryUser {
 
     public BaseResponse<String> AddUserGroup(String groupID, String userID) {
         try {
+            log.info("AddUserGroupaaaa: {}", groupID + " " + userID);
             getRealmResource().users().get(userID).joinGroup(groupID);
+
             return BaseResponse.<String>builder().code("200").data("").message("thành công ").build();
         } catch (Exception e) {
+            log.error("AddUserGroupbb: {}", e.getCause());
             return BaseResponse.<String>builder().code("400").data("").message(e.getMessage()).build();
         }
     }
@@ -153,7 +173,7 @@ public class UserRepositoryImpl implements IRepositoryUser {
     public BaseResponse<String> RemoveUserGroup(String groupID, String userID) {
         try {
             getRealmResource().users().get(userID).leaveGroup(groupID);
-            return BaseResponse.<String>builder().code("200").data("").message("thành công ").build();
+            return BaseResponse.<String>builder().code("200").data("").message("thành công").build();
         } catch (Exception e) {
             return BaseResponse.<String>builder().code("400").data("").message(e.getMessage()).build();
         }
@@ -173,61 +193,96 @@ public class UserRepositoryImpl implements IRepositoryUser {
         }
     }
 
-    public BaseResponse<List<GroupRepresentation>> GetAllGroup() {
+    public BaseResponse<List<GroupResponse>> GetAllGroup() { // 1. Đổi kiểu trả về từ GroupRepresentation thành
+                                                             // GroupResponse
         try {
+            log.info(" get all group ");
+
+            // Lấy danh sách gốc từ Keycloak
             List<GroupRepresentation> groups = getRealmResource().groups().groups();
-            return BaseResponse.<List<GroupRepresentation>>builder().code("200").data(groups).message("thành công ")
+
+            if (groups == null || groups.isEmpty()) {
+                return BaseResponse.<List<GroupResponse>>builder()
+                        .code("404")
+                        .data(null)
+                        .message("không tìm thấy ")
+                        .build();
+            }
+
+            List<GroupResponse> groupResponses = groups.stream()
+                    .map(GroupResponse::from)
+                    .toList();
+
+            log.info(" group all ss : " + groupResponses);
+
+            return BaseResponse.<List<GroupResponse>>builder()
+                    .code("200")
+                    .data(groupResponses)
+                    .message("thành công ")
                     .build();
+
         } catch (Exception e) {
-            return BaseResponse.<List<GroupRepresentation>>builder().code("400").data(null)
-                    .message(e.getMessage()).build();
+            log.error("Lỗi lấy danh sách nhóm: ", e);
+
+            return BaseResponse.<List<GroupResponse>>builder()
+                    .code("400")
+                    .data(null)
+                    .message(e.getMessage())
+                    .build();
         }
     }
 
-    public BaseResponse<GroupRepresentation> GetGroupById(String groupId) {
+    public BaseResponse<GroupResponse> GetGroupById(String groupId) {
         try {
             GroupRepresentation group = getRealmResource().groups().group(groupId).toRepresentation();
-            return BaseResponse.<GroupRepresentation>builder().code("200").data(group).message("thành công ")
+            GroupResponse groupdata = GroupResponse.from(group);
+            log.info("groupdata: {}", groupdata);
+            return BaseResponse.<GroupResponse>builder().code("200").data(groupdata).message("thành công ")
                     .build();
         } catch (Exception e) {
-            return BaseResponse.<GroupRepresentation>builder().code("400").data(null)
+            return BaseResponse.<GroupResponse>builder().code("400").data(null)
                     .message(e.getMessage()).build();
         }
     }
 
-    public BaseResponse<List<UserRepresentation>> GetAllUser() {
+    public BaseResponse<List<UserResponse>> GetAllUser() {
         try {
             List<UserRepresentation> users = getRealmResource().users().list();
-            return BaseResponse.<List<UserRepresentation>>builder().code("200").data(users).message("thành công ")
+            List<UserResponse> userdata = users.stream()
+                    .map(UserResponse::from)
+                    .toList();
+            return BaseResponse.<List<UserResponse>>builder().code("200").data(userdata).message("thành công ")
                     .build();
         } catch (Exception e) {
-            return BaseResponse.<List<UserRepresentation>>builder().code("400").data(null)
+            return BaseResponse.<List<UserResponse>>builder().code("400").data(null)
                     .message(e.getMessage()).build();
         }
     }
 
-    public BaseResponse<UserRepresentation> GetUserByUserId(String userId) {
+    public BaseResponse<UserResponse> GetUserByUserId(String userId) {
         try {
             UserRepresentation user = getRealmResource().users().get(userId).toRepresentation();
-            return BaseResponse.<UserRepresentation>builder().code("200").data(user).message("thành công ")
+            UserResponse userResponse = UserResponse.from(user);
+            return BaseResponse.<UserResponse>builder().code("200").data(userResponse).message("thành công ")
                     .build();
         } catch (Exception e) {
-            return BaseResponse.<UserRepresentation>builder().code("400").data(null)
+            return BaseResponse.<UserResponse>builder().code("400").data(null)
                     .message(e.getMessage()).build();
         }
     }
 
-    public BaseResponse<UserRepresentation> GetUserByEmail(String email) {
+    public BaseResponse<UserResponse> GetUserByEmail(String email) {
         try {
             List<UserRepresentation> users = getRealmResource().users().search(email);
             if (users.isEmpty()) {
-                return BaseResponse.<UserRepresentation>builder().code("404").data(null).message("không tìm thấy ")
+                return BaseResponse.<UserResponse>builder().code("404").data(null).message("không tìm thấy ")
                         .build();
             }
-            return BaseResponse.<UserRepresentation>builder().code("200").data(users.get(0)).message("thành công ")
+            UserResponse userResponse = UserResponse.from(users.get(0));
+            return BaseResponse.<UserResponse>builder().code("200").data(userResponse).message("thành công ")
                     .build();
         } catch (Exception e) {
-            return BaseResponse.<UserRepresentation>builder().code("400").data(null)
+            return BaseResponse.<UserResponse>builder().code("400").data(null)
                     .message(e.getMessage()).build();
         }
     }
@@ -240,6 +295,7 @@ public class UserRepositoryImpl implements IRepositoryUser {
                         .build();
             }
             UserRepresentation user = users.get(0);
+            user.setEmailVerified(true);
             user.setEnabled(isActive);
             getRealmResource().users().get(user.getId()).update(user);
             return BaseResponse.<String>builder().code("200").data("").message("thành công ").build();
@@ -250,16 +306,27 @@ public class UserRepositoryImpl implements IRepositoryUser {
 
     @Override
     public BaseResponse<String> sendResetPasswordEmail(ResetPasswordRequest request) {
+        log.info("request: {}", request);
         try {
-            UserResource userResource = getRealmResource().users().get(request.email());
-            if (userResource == null) {
-                return BaseResponse.<String>builder().code("404").data("").message("không tìm thấy ").build();
+            BaseResponse<UserResponse> userResponse = GetUserByEmail(request.getEmail());
+            log.info("userResponse: {}", userResponse);
+            if (!"200".equals(userResponse.getCode())) {
+                return BaseResponse.<String>builder().code(userResponse.getCode()).message(userResponse.getMessage())
+                        .build();
             }
+            UserResource userResource = getRealmResource().users().get(userResponse.getData().getId());
+            var userRepresentation = userResource.toRepresentation();
+            log.info("User Data thật sự: {}", userRepresentation);
+            log.info("Username: {}, Email: {}", userRepresentation.getUsername(), userRepresentation.getEmail());
+        
             List<String> actions = List.of("UPDATE_PASSWORD");
-            userResource.executeActionsEmail(request.clientId(), request.redirectUri(), actions);
+            // userResource.executeActionsEmail(request.getClientId(), request.getRedirectUri(), actions);
+                    userResource.executeActionsEmail(null, null, actions);
+            log.info("action: {}", actions);
             return BaseResponse.<String>builder().code("200").data("").message("thành công").build();
 
         } catch (Exception e) {
+            log.error("Lỗi khi gửi email reset password: ", e);
             return BaseResponse.<String>builder().code("400").data("").message(e.getMessage()).build();
         }
     }

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1hhh2f3" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Web Modeler" exporterVersion="65aa273" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
+  <decision id="rule-base-0mgnq1p" name="rule base">
+    <decisionTable id="DecisionTable_18xayc0">
+      <input id="Input_1">
+        <inputExpression id="InputExpression_1" typeRef="boolean">
+          <text>need0</text>
+        </inputExpression>
+      </input>
+      <output id="Output_1" name="need" typeRef="boolean" />
+      <rule id="DecisionRule_1v4979l">
+        <inputEntry id="UnaryTests_01lmx7i">
+          <text>true</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1hnlr8k">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_12th0k7">
+        <inputEntry id="UnaryTests_1v9g8d0">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1pywiju">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram>
+      <dmndi:DMNShape dmnElementRef="rule-base-0mgnq1p">
+        <dc:Bounds height="80" width="180" x="160" y="80" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

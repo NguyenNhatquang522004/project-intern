@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -67,7 +68,7 @@ public class LeaveValidateRequestUseCase implements ILeaveValidateRequestUseCase
                         .build();
             }
             List<LeaveBalance> leaveBalances = repositoryLeaveBalance.findByEmployee_IdAndYear(request.employeeId(),
-                    2025);
+                    Year.now().getValue());
             log.info("Leave balances: {}", leaveBalances);
             if (leaveBalances.isEmpty() || leaveBalances.size() > 1) {
                 return BaseResponse.<LeaveValidRespones>builder().code("400").message("Leave balance not found")

@@ -8,11 +8,14 @@ import org.keycloak.representations.idm.UserRepresentation;
 import com.example.demo.common.Dto.BaseResponse;
 import com.example.demo.leavecore.delivery.Dto.Employee.EmployeeRequest.EmployeeCreateRequest;
 import com.example.demo.leavecore.delivery.Dto.auth.LoginResponse;
+import com.example.demo.leavecore.delivery.Dto.auth.RegisterStep1Request;
+import com.example.demo.leavecore.delivery.Dto.auth.ResetPasswordRequest;
+import com.example.demo.leavecore.delivery.Dto.keycloak.GroupResponse;
+import com.example.demo.leavecore.delivery.Dto.keycloak.UserResponse;
 import com.example.demo.leavecore.delivery.Dto.auth.AuthRequest.LoginRequest;
-import com.example.demo.leavecore.delivery.Dto.auth.AuthRequest.RegisterStep1Request;
-import com.example.demo.leavecore.delivery.Dto.auth.AuthRequest.ResetPasswordRequest;
 
 public interface IRepositoryUser {
+
 
     BaseResponse<String> CreateGroup(String groupName);
 
@@ -26,19 +29,22 @@ public interface IRepositoryUser {
 
     BaseResponse<Boolean> CheckUserGroup(String groupID, String userID);
 
-    BaseResponse<List<GroupRepresentation>> GetAllGroup();
+    BaseResponse<List<GroupResponse>> GetAllGroup();
 
-    BaseResponse<GroupRepresentation> GetGroupById(String groupId);
+    BaseResponse<GroupResponse> GetGroupById(String groupId);
 
-    BaseResponse<List<UserRepresentation>> GetAllUser();
+    BaseResponse<List<UserResponse>> GetAllUser();
 
-    BaseResponse<UserRepresentation> GetUserByUserId(String userId);
+    BaseResponse<UserResponse> GetUserByUserId(String userId);
 
-    BaseResponse<UserRepresentation> GetUserByEmail(String email);
+    BaseResponse<UserResponse> GetUserByEmail(String email);
 
     BaseResponse<String> UpdateIsActiveUser(String email, boolean isActive);
 
     BaseResponse<String> sendResetPasswordEmail(ResetPasswordRequest request);
 
     LoginResponse Login(LoginRequest request);
+
+
+    
 }

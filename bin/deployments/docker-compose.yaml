@@ -1,0 +1,118 @@
+version: '3.8'
+name: demo-camunda
+services :
+  postgres:
+    image: postgres:13
+    container_name: camunda-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=camunda
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - camunda_network
+  # pgadmin:
+  #   image: dpage/pgadmin4:8.5
+  #   container_name: camunda-pgadmin
+  #   environment:
+  #     - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+  #     - PGADMIN_DEFAULT_PASSWORD=password
+  #   ports:
+  #     - "5050:80"
+  #   networks:
+  #     - camunda_network
+  #   depends_on:
+  #     - postgres
+  elasticsearch:
+    image: elasticsearch:7.17.14
+    container_name: camunda-elasticsearch
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+    networks:
+      - camunda_network
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.14
+    container_name: camunda-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    volumes:
+      - ../elk/kibana/node.options:/usr/share/kibana/config/node.options:ro
+    networks:
+      - camunda_network
+    depends_on:
+      - elasticsearch
+  # redis:
+  #   image: redis:6.2.7
+  #   container_name: camunda-redis
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - camunda_network
+  seaweedfs-master:
+    image: chrislusf/seaweedfs:3.78
+    container_name: seaweedfs-master
+    command: "master -ip=seaweedfs-master -port=9333"
+    networks:
+      - camunda_network
+  seaweedfs-volume:
+    image: chrislusf/seaweedfs:3.78
+    container_name: seaweedfs-volume
+    command: "volume -mserver=seaweedfs-master:9333 -port=8080"
+    volumes:
+      - ./seaweed_data:/data
+    networks:
+      - camunda_network
+    depends_on:
+      - seaweedfs-master
+  seaweedfs-filer:
+    image: chrislusf/seaweedfs:3.78
+    container_name: seaweedfs-filer
+    command: 'filer -master=seaweedfs-master:9333 -s3'
+    volumes:
+      - ../elk/seaweedfs/filer.toml:/etc/seaweedfs/filer.toml:ro
+    networks:
+      - camunda_network
+    depends_on:
+      - seaweedfs-master
+      - postgres
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.14
+    container_name: camunda-logstash
+    entrypoint: >
+      sh -c "logstash-plugin install logstash-output-s3 && 
+             /usr/local/bin/docker-entrypoint"
+    volumes:
+      - ../elk/logstash/pipeline:/usr/share/logstash/pipeline
+    networks:
+      - camunda_network
+    depends_on:
+      - elasticsearch
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.17.14
+    container_name: camunda-filebeat
+    user: root
+    volumes:
+      - ../logs:/usr/share/filebeat/logs:ro
+      - ../elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+    networks:
+      - camunda_network
+    depends_on:
+      - logstash
+
+  
+
+volumes:
+  postgres_data: {}
+
+networks:
+  camunda_network:
+    driver: bridge
+
+    

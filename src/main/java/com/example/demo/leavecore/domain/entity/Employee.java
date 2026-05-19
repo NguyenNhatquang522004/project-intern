@@ -48,18 +48,18 @@ public class Employee {
     @Column(name = "count_fail_otp")
     private Integer countFailOtp;
 
-    @Column(name = "position_level", nullable = false)
+    @Column(name = "position_level", nullable = true)
     private Integer positionLevel;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id", nullable = false)
+    @JoinColumn(name = "department_id", nullable = true)
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id")
     private Employee manager;
 
-    @Column(name = "account_status", length = 20)
+    @Column(name = "status", length = 20)
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private AccountStatusEnum status = AccountStatusEnum.INACTIVE;

@@ -7,6 +7,8 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Ho_Chi_Minh
     default-property-inclusion: non_null
+    deserialization:
+      fail_on_unknown_properties: false 
   mail:
     host: smtp.gmail.com          
     port: 587                   
@@ -98,14 +100,14 @@ camunda:
       issuer-url: http://localhost:18080/auth/realms/camunda-platform
     zeebe:
       gateway-address: localhost:26500
+      enabled: true
       security:
-        plaintext: true # Vì chạy local nên không cần SSL/TLS cho gRPC
-# 5. Cấu hình Logging (Tích hợp Logback & ELK Stack)
+        plaintext: true 
 logging:
   level:
     root: INFO
     com.nhatquang.demo: DEBUG
-    io.camunda.zeebe.client: WARN
+    io.camunda.zeebe.client: OFF
     org.hibernate.SQL: INFO
   pattern:
     # Định dạng Console cho Developer dễ đọc
@@ -128,10 +130,9 @@ grpc:
       address: 'static://127.0.0.1:9090'
       negotiation-type: plaintext
  
-
 keycloak:
   admin:
-    server-url: http://localhost:18080
+    server-url: http://localhost:18080/auth
     realm: camunda-platform
     client-id: cammuda-client
     client-secret: sl9EiYyFEvzqsJonqhLlreJM2kbovtjp

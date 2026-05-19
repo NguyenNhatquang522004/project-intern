@@ -47,7 +47,7 @@ export default function TasklistDashboard() {
   } = useTasks(activeFilter);
   
   // Tên người dùng đăng nhập hiện tại làm người duyệt (đồng bộ động với backend qua OIDC token)
-  const currentUser = session?.user?.username || session?.user?.email || 'demo_manager@company.com';
+  const currentUser = session?.user?.email || session?.user?.username || '';
 
   // Kiểm tra tác vụ có thuộc về tài khoản hiện tại không (bảo vệ 100% khớp các định dạng từ Keycloak OIDC/Mock)
   const isAssignedToCurrentUser = (task: UserTask | null) => {
@@ -59,9 +59,7 @@ export default function TasklistDashboard() {
 
     return assigneeLower === currentUsernameLower || 
            assigneeLower === currentUserEmailLower ||
-           assigneeLower === emailPrefixLower ||
-           assigneeLower === 'demo_manager@company.com' ||
-           (assigneeLower === 'demo' && (currentUserEmailLower === 'demo@example.org' || emailPrefixLower === 'demo'));
+           assigneeLower === emailPrefixLower;
   };
 
   // Lọc danh sách tác vụ hiển thị theo từ khóa tìm kiếm
@@ -238,11 +236,11 @@ export default function TasklistDashboard() {
         {/* Thông tin User Tài khoản */}
         <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center gap-3">
           <div className="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-sm font-semibold text-sky-400 border border-slate-700">
-            {(currentUser || 'D').charAt(0).toUpperCase()}
+            {((session?.user?.username || session?.user?.name || currentUser || 'U') as string).charAt(0).toUpperCase()}
           </div>
           <div className="overflow-hidden">
-            <p className="text-xs font-semibold text-slate-200 truncate">Manager Console</p>
-            <p className="text-[10px] text-slate-500 truncate">{currentUser}</p>
+            <p className="text-xs font-semibold text-slate-200 truncate">{session?.user?.username || session?.user?.name || "User Console"}</p>
+            <p className="text-[10px] text-slate-500 truncate">{session?.user?.email || currentUser}</p>
           </div>
         </div>
       </aside>

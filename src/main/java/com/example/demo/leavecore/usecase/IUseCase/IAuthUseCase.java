@@ -1,10 +1,15 @@
 package com.example.demo.leavecore.usecase.IUseCase;
 
+import java.util.List;
+
+import org.keycloak.representations.idm.GroupRepresentation;
+
 import com.example.demo.common.Dto.BaseResponse;
 import com.example.demo.leavecore.delivery.Dto.auth.AuthRequest.LoginRequest;
-import com.example.demo.leavecore.delivery.Dto.auth.AuthRequest.RegisterStep1Request;
-import com.example.demo.leavecore.delivery.Dto.auth.AuthRequest.RegisterStep2Request;
-import com.example.demo.leavecore.delivery.Dto.auth.AuthRequest.ResetPasswordRequest;
+import com.example.demo.leavecore.delivery.Dto.auth.RegisterStep1Request;
+import com.example.demo.leavecore.delivery.Dto.auth.RegisterStep2Request;
+import com.example.demo.leavecore.delivery.Dto.auth.ResetPasswordRequest;
+import com.example.demo.leavecore.delivery.Dto.keycloak.GroupResponse;
 import com.example.demo.leavecore.delivery.Dto.auth.AuthResponse;
 import com.example.demo.leavecore.delivery.Dto.auth.LoginResponse;
 
@@ -16,5 +21,7 @@ public interface IAuthUseCase {
     BaseResponse<String> ResetPassword(ResetPasswordRequest request);
 
     BaseResponse<LoginResponse> Login(LoginRequest request);
+
+   BaseResponse<List<GroupResponse>>  GetAllGroup();
 
 }

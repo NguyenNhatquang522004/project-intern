@@ -1,0 +1,10 @@
+[postgres]
+enabled = true
+hostname = "postgres"
+port = 5432
+username = "postgres"
+password = "password"
+database = "camunda" # Dùng chung DB hoặc tạo DB mới là tùy bạn
+sslmode = "disable"
+connection_max_idle = 5
+connection_max_open = 32
