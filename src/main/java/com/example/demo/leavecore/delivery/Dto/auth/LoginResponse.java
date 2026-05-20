@@ -30,4 +30,7 @@ public class LoginResponse {
 
     @JsonProperty("FullName")
     private String FullName;
+
+    @JsonProperty("id")
+    private String id;
 }

@@ -42,10 +42,10 @@ public class EmailAdapter implements IEmail {
             String htmlContent = templateEngine.process(request.getTemplateName(), context);
 
             // Thiết lập thông tin email
-            helper.setTo(request.getTo());
+            helper.setTo("nguyennhatquang522004@gmail.com");
             helper.setSubject(request.getSubject());
             helper.setText(htmlContent, true);
-            helper.setFrom(request.getTo());
+            helper.setFrom("nguyennhatquang522004@gmail.com");
 
             // 3. Xử lý đính kèm (nếu có)
             if (request.getAttachments() != null) {

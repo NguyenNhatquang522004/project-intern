@@ -48,7 +48,9 @@ public class LeaveUpdateStatusWorker {
                 client.newFailCommand(job.getKey()).retries(job.getRetries() - 1).errorMessage(response.getMessage());
             }
 
-            outputVariables.put("need0", true);
+            
+    
+            outputVariables.put("need0", false);
             outputVariables.put("isvaildrule", true);
             outputVariables.put("Status", data.status());
             log.info("Setting output variables: {}", outputVariables);

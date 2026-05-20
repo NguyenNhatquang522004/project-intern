@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
             padding: 0;
             -webkit-font-smoothing: antialiased;
         }
+
         .email-container {
             max-width: 500px;
             margin: 40px auto;
@@ -21,27 +23,32 @@
             overflow: hidden;
             border: 1px solid #eef2f5;
         }
+
         .email-header {
             background-color: #0052cc;
             padding: 30px;
             text-align: center;
         }
+
         .email-header h1 {
             color: #ffffff;
             font-size: 24px;
             margin: 0;
             font-weight: 600;
         }
+
         .email-body {
             padding: 40px 30px;
             color: #333333;
             line-height: 1.6;
         }
+
         .greeting {
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 20px;
         }
+
         .otp-box {
             background-color: #f4f7fa;
             border: 2px dashed #cbd5e1;
@@ -51,17 +58,20 @@
             margin: 30px 0;
             letter-spacing: 6px;
         }
+
         .otp-code {
             font-size: 32px;
             font-weight: 700;
             color: #0052cc;
             margin: 0;
         }
+
         .note {
             font-size: 14px;
             color: #666666;
             margin-top: 25px;
         }
+
         .warning {
             font-size: 13px;
             color: #ef4444;
@@ -71,6 +81,7 @@
             border-left: 4px solid #ef4444;
             margin-top: 20px;
         }
+
         .email-footer {
             background-color: #fafbfc;
             padding: 20px;
@@ -81,6 +92,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="email-container">
@@ -91,18 +103,19 @@
 
         <!-- Body -->
         <div class="email-body">
-            <div class="greeting">Xin chào, ${username}!</div>
-            <p>Bạn đang thực hiện yêu cầu xác thực tại hệ thống của chúng tôi. Vui lòng sử dụng mã OTP dưới đây để hoàn tất quy trình:</p>
-            
+            <div class="greeting">Xin chào, <span th:text="${username}">Người dùng</span>!</div>
+            <p>Bạn đang thực hiện yêu cầu xác thực tại hệ thống của chúng tôi. Vui lòng sử dụng mã OTP dưới đây để hoàn
+                tất quy trình:</p>
+
             <!-- OTP Display -->
             <div class="otp-box">
-                <div class="otp-code">${otpCode}</div>
+                <div class="otp-code" th:text="${otpCode}"></div>
             </div>
-
-            <p class="note">Mã này có hiệu lực trong vòng <strong>${expiryMinutes} phút</strong> và chỉ có giá trị sử dụng một lần duy nhất.</p>
-            
+            <p class="note">Mã này có hiệu lực trong vòng <strong th:text="${expiryMinutes} + ' phút'">30
+                    phút</strong>và chỉ có giá trị sử dụng một lần duy nhất.</p>
             <div class="warning">
-                <strong>Bảo mật:</strong> Tuyệt đối KHÔNG chia sẻ mã này với bất kỳ ai, kể cả nhân viên hỗ trợ của chúng tôi.
+                <strong>Bảo mật:</strong> Tuyệt đối KHÔNG chia sẻ mã này với bất kỳ ai, kể cả nhân viên hỗ trợ của chúng
+                tôi.
             </div>
         </div>
 
@@ -114,4 +127,5 @@
     </div>
 
 </body>
+
 </html>

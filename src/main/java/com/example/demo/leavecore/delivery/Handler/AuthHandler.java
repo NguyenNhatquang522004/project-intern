@@ -173,8 +173,8 @@ public class AuthHandler {
     @PostMapping("/logout")
     public ResponseEntity<BaseResponse<String>> logout(HttpServletResponse response) {
         try {
-            CookieUtils.clearCookie(response, "access_token");
-            CookieUtils.clearCookie(response, "refresh_token");
+            CookieUtils.clearCookie(response, "access-token");
+            CookieUtils.clearCookie(response, "refresh-token");
             return ResponseEntity.ok(BaseResponse.<String>builder()
                     .code("200")
                     .message("Đăng xuất và xóa session cookie thành công")

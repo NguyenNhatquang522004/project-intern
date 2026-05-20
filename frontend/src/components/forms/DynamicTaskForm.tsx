@@ -46,16 +46,16 @@ export const DynamicTaskForm: React.FC<DynamicTaskFormProps> = ({
   } = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      Email: 'hoa.bui@company.com',
-      EmployeeID: 'a10e2059-a3ec-4385-946e-af156f3dc796',
-      FullName: 'Bùi Thị Hoa',
+      Email: 'abc@gmail.com',
+      EmployeeID: '04a0c5a1-49fa-4606-b104-dbbc3ce6009e',
+      FullName: 'Nguyễn Văn An',
       Department: 'HR',
       LeaveType: ['ANNUAL'],
       StartDate: '2026-05-21',
       EndDate: '2026-05-26',
       leaveSession: 'ALLDAY',
       totaldays: 5.5,
-      reason: 'Nghỉ phép dài ngày',
+      reason: 'aaa',
       Status: 'PENDING',
     },
   });
@@ -71,8 +71,8 @@ export const DynamicTaskForm: React.FC<DynamicTaskFormProps> = ({
         LeaveType: Array.isArray(initialData.LeaveType)
           ? initialData.LeaveType
           : typeof initialData.LeaveType === 'string'
-          ? [initialData.LeaveType]
-          : ['ANNUAL'],
+            ? [initialData.LeaveType]
+            : ['ANNUAL'],
         StartDate: initialData.StartDate || '',
         EndDate: initialData.EndDate || '',
         leaveSession: initialData.leaveSession === 'ALL_DAY' ? 'ALLDAY' : initialData.leaveSession === 'MORNING' ? 'MORNING' : initialData.leaveSession === 'AFTERNOON' ? 'AFTERNOON' : 'ALLDAY',
@@ -94,7 +94,7 @@ export const DynamicTaskForm: React.FC<DynamicTaskFormProps> = ({
       const end = new Date(endDate);
       const diffTime = Math.abs(end.getTime() - start.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      
+
       let finalDays = isNaN(diffDays) ? 0 : diffDays;
       if (session === 'MORNING' || session === 'AFTERNOON') {
         finalDays = finalDays * 0.5;

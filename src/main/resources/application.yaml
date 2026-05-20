@@ -101,13 +101,13 @@ camunda:
     zeebe:
       gateway-address: localhost:26500
       enabled: true
-      security:
+      security:   
         plaintext: true 
 logging:
   level:
     root: INFO
     com.nhatquang.demo: DEBUG
-    io.camunda.zeebe.client: OFF
+    io.camunda.zeebe.client: WARN
     org.hibernate.SQL: INFO
   pattern:
     # Định dạng Console cho Developer dễ đọc

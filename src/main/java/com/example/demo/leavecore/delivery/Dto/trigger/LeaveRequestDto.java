@@ -56,9 +56,9 @@ public class LeaveRequestDto {
     private String leaveSession;
 
     @NotNull(message = "Tổng số ngày phép không được để trống")
-    @Min(value = 1, message = "Tổng số ngày phép phải lớn hơn hoặc bằng 1")
+    @DecimalMin(value = "0.5", message = "Tổng số ngày phép phải lớn hơn hoặc bằng 0.5")
     @JsonProperty("totaldays")
-    private Integer totaldays;
+    private Double totaldays;
 
     @Size(max = 500, message = "Lý do không được vượt quá 500 ký tự")
     @JsonProperty("Reason")
@@ -88,7 +88,7 @@ public class LeaveRequestDto {
      * với cả hai dạng biến mà Job Worker có thể bóc tách (cả totaldays và TotalWorkingDays).
      */
     @JsonProperty("TotalWorkingDays")
-    public Integer getTotalWorkingDays() {
+    public Double getTotalWorkingDays() {
         return this.totaldays;
     }
 

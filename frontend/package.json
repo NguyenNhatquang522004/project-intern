@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+   "dev:app-a": "cross-env PORT=3000 NEXT_PUBLIC_APP_ID=app-a NEXT_PUBLIC_IDP_URL=http://localhost:18080/ NEXT_PUBLIC_CALLBACK_URL=http://localhost:3000/api/auth/callback next dev",
+  "dev:app-b": "cross-env PORT=4000 NEXT_PUBLIC_APP_ID=app-b NEXT_PUBLIC_IDP_URL=http://localhost:18080/ NEXT_PUBLIC_CALLBACK_URL=http://localhost:4000/api/auth/callback next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -29,6 +31,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",

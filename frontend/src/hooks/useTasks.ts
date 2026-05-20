@@ -1,14 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '@/services/api';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 export const useTasks = (filter: string = 'ALL_OPEN') => {
+  const { data: session } = useSession();
   const queryClient = useQueryClient();
 
   // 1. Fetch danh sách task theo bộ lọc hiện tại
   const tasksQuery = useQuery({
     queryKey: ['tasks', filter],
     queryFn: () => apiService.getTasks(filter),
+    enabled: !!session?.accessToken,
     refetchInterval: 5000, // Tự động làm mới mỗi 5 giây
   });
 
@@ -16,6 +19,7 @@ export const useTasks = (filter: string = 'ALL_OPEN') => {
   const summaryQuery = useQuery({
     queryKey: ['filtersSummary'],
     queryFn: apiService.getFiltersSummary,
+    enabled: !!session?.accessToken,
     refetchInterval: 5000,
   });
 

@@ -27,7 +27,7 @@ public class HandleTaskEventUseCase implements IHandleTaskEventUseCase {
     public void handleTaskAssignEvent(String bussinesskey, String emailAssignee) {
         try {
             log.info("handleTaskAssignEvent: {}", bussinesskey);
-            Optional<Employee> employee = repositoryEmployee.findByEmail("demo@example.org");
+            Optional<Employee> employee = repositoryEmployee.findByEmail(emailAssignee);
             log.info("handleTaskAssignEvent: {}", employee.get().getEmail());
             if (employee.isEmpty()) {
                 throw new RuntimeException("Employee not found");

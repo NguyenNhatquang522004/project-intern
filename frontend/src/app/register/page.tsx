@@ -78,7 +78,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const response = await axios.post(`${API_URL}/register-step2`, {
-        Otp: data.Otp,
+        otp: data.Otp,
         email: data.email,
       });
 

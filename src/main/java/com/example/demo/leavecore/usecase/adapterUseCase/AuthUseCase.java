@@ -294,6 +294,7 @@ public class AuthUseCase implements IAuthUseCase {
             }
             loginResponse.setEmail(request.email());
             loginResponse.setFullName(employee.get().getFullName());
+            loginResponse.setId(employee.get().getId().toString());
             log.info("loginResponse: {}", loginResponse);
             return BaseResponse.<LoginResponse>builder()
                     .code("200")

@@ -1,31 +1,86 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTasks } from '@/hooks/useTasks';
 import { DynamicTaskForm } from '@/components/forms/DynamicTaskForm';
 import { UserTask } from '@/types/task';
 import { apiService } from '@/services/api';
 import { useQueryClient } from '@tanstack/react-query';
-import { 
-  Inbox, 
-  UserCheck, 
-  Users, 
-  Search, 
-  RefreshCw, 
-  Layers, 
-  Clock, 
-  User, 
+import {
+  Inbox,
+  UserCheck,
+  Users,
+  Search,
+  RefreshCw,
+  Layers,
+  Clock,
+  User,
   AlertCircle,
   PlusCircle,
   X,
-  CheckSquare
+  CheckSquare,
+  LogOut
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function TasklistDashboard() {
-  const { data: session } = useSession();
-  
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      // Xoá cookie phía client
+      document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'userEmail=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      sessionStorage.removeItem('accessToken');
+      await apiService.logout();
+    } catch (err) {
+      console.error('Đăng xuất backend thất bại:', err);
+    } finally {
+      signOut({ callbackUrl: '/login' });
+    }
+  };
+
+  useEffect(() => {
+    if (status === 'unauthenticated' || session?.error === 'RefreshAccessTokenError') {
+      handleLogout();
+    }
+  }, [status, session, router]);
+
+  // Đồng bộ accessToken với Cookie & sessionStorage để người dùng thấy/xoá thủ công
+  const [isTokenSynced, setIsTokenSynced] = useState(false);
+
+  useEffect(() => {
+    if (session?.accessToken) {
+      document.cookie = `accessToken=${session.accessToken}; path=/; max-age=86400; SameSite=Lax`;
+      if (session.user?.email) {
+        document.cookie = `userEmail=${session.user.email}; path=/; max-age=86400; SameSite=Lax`;
+      }
+      sessionStorage.setItem('accessToken', session.accessToken);
+      setIsTokenSynced(true);
+    }
+  }, [session]);
+
+  // Kiểm tra chu kỳ 2 giây xem token có bị xoá thủ công ở cookie không
+  useEffect(() => {
+    if (status !== 'authenticated' || !isTokenSynced) return;
+
+    const checkToken = () => {
+      const cookies = document.cookie.split(';').map(c => c.trim());
+      const tokenCookie = cookies.find(c => c.startsWith('accessToken='));
+
+      if (!tokenCookie) {
+        console.warn("Phát hiện accessToken bị xóa thủ công! Đang tiến hành tự động đăng xuất...");
+        handleLogout();
+      }
+    };
+
+    const interval = setInterval(checkToken, 2000);
+    return () => clearInterval(interval);
+  }, [status, isTokenSynced]);
+
   const [activeFilter, setActiveFilter] = useState<string>('ALL_OPEN');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTask, setSelectedTask] = useState<UserTask | null>(null);
@@ -34,20 +89,26 @@ export default function TasklistDashboard() {
 
   const queryClient = useQueryClient();
 
-  const { 
-    tasks, 
-    isLoading, 
+  const {
+    tasks,
+    isLoading,
     summary,
-    assignTask, 
-    unassignTask, 
-    completeTask, 
-    isClaiming, 
-    isUnclaiming, 
-    isCompleting 
+    assignTask,
+    unassignTask,
+    completeTask,
+    isClaiming,
+    isUnclaiming,
+    isCompleting
   } = useTasks(activeFilter);
-  
+
   // Tên người dùng đăng nhập hiện tại làm người duyệt (đồng bộ động với backend qua OIDC token)
   const currentUser = session?.user?.email || session?.user?.username || '';
+
+  // Kiểm tra UUID hợp lệ và lấy UUID của người dùng hiện tại
+  const isUUID = (val: string) => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
+  const userUuid = session?.user?.id && isUUID(session.user.id)
+    ? session.user.id
+    : '04a0c5a1-49fa-4606-b104-dbbc3ce6009e';
 
   // Kiểm tra tác vụ có thuộc về tài khoản hiện tại không (bảo vệ 100% khớp các định dạng từ Keycloak OIDC/Mock)
   const isAssignedToCurrentUser = (task: UserTask | null) => {
@@ -57,9 +118,9 @@ export default function TasklistDashboard() {
     const currentUserEmailLower = (session?.user?.email || '').toLowerCase();
     const emailPrefixLower = currentUserEmailLower.split('@')[0];
 
-    return assigneeLower === currentUsernameLower || 
-           assigneeLower === currentUserEmailLower ||
-           assigneeLower === emailPrefixLower;
+    return assigneeLower === currentUsernameLower ||
+      assigneeLower === currentUserEmailLower ||
+      assigneeLower === emailPrefixLower;
   };
 
   // Lọc danh sách tác vụ hiển thị theo từ khóa tìm kiếm
@@ -101,10 +162,10 @@ export default function TasklistDashboard() {
         ...formData,
         BusinessKey: 'LR-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
       };
-      
+
       const response = await apiService.submitLeaveRequest(mappedData);
       toast.success(`Đơn xin nghỉ phép đã được nộp thành công! Instance Key: ${response.data || 'OK'}`);
-      
+
       setIsCreateOpen(false);
       // Invalidate queries để tải lại danh sách task mới
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -119,7 +180,7 @@ export default function TasklistDashboard() {
 
   return (
     <div className="flex h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
-      
+
       {/* ========================================================
           1. SIDEBAR (Thanh bộ lọc bên trái - Camunda Style)
           ======================================================== */}
@@ -150,17 +211,16 @@ export default function TasklistDashboard() {
           {/* Bộ lọc Tác vụ */}
           <nav className="p-4 space-y-2">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">Task Filters</span>
-            
+
             <button
               onClick={() => {
                 setActiveFilter('ALL_OPEN');
                 setSelectedTask(null);
               }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm transition font-medium ${
-                activeFilter === 'ALL_OPEN' 
-                  ? 'bg-slate-800 text-amber-500 border-l-4 border-amber-500' 
-                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-              }`}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm transition font-medium ${activeFilter === 'ALL_OPEN'
+                ? 'bg-slate-800 text-amber-500 border-l-4 border-amber-500'
+                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                }`}
             >
               <div className="flex items-center gap-2.5">
                 <Inbox size={16} />
@@ -176,11 +236,10 @@ export default function TasklistDashboard() {
                 setActiveFilter('ASSIGNED_TO_ME');
                 setSelectedTask(null);
               }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm transition font-medium ${
-                activeFilter === 'ASSIGNED_TO_ME' 
-                  ? 'bg-slate-800 text-amber-500 border-l-4 border-amber-500' 
-                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-              }`}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm transition font-medium ${activeFilter === 'ASSIGNED_TO_ME'
+                ? 'bg-slate-800 text-amber-500 border-l-4 border-amber-500'
+                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                }`}
             >
               <div className="flex items-center gap-2.5">
                 <UserCheck size={16} />
@@ -196,11 +255,10 @@ export default function TasklistDashboard() {
                 setActiveFilter('UNASSIGNED');
                 setSelectedTask(null);
               }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm transition font-medium ${
-                activeFilter === 'UNASSIGNED' 
-                  ? 'bg-slate-800 text-amber-500 border-l-4 border-amber-500' 
-                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-              }`}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm transition font-medium ${activeFilter === 'UNASSIGNED'
+                ? 'bg-slate-800 text-amber-500 border-l-4 border-amber-500'
+                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                }`}
             >
               <div className="flex items-center gap-2.5">
                 <Users size={16} />
@@ -216,11 +274,10 @@ export default function TasklistDashboard() {
                 setActiveFilter('COMPLETED');
                 setSelectedTask(null);
               }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm transition font-medium ${
-                activeFilter === 'COMPLETED' 
-                  ? 'bg-slate-800 text-amber-500 border-l-4 border-amber-500' 
-                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-              }`}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm transition font-medium ${activeFilter === 'COMPLETED'
+                ? 'bg-slate-800 text-amber-500 border-l-4 border-amber-500'
+                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                }`}
             >
               <div className="flex items-center gap-2.5">
                 <CheckSquare size={16} />
@@ -233,15 +290,24 @@ export default function TasklistDashboard() {
           </nav>
         </div>
 
-        {/* Thông tin User Tài khoản */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-sm font-semibold text-sky-400 border border-slate-700">
-            {((session?.user?.username || session?.user?.name || currentUser || 'U') as string).charAt(0).toUpperCase()}
+        {/* Thông tin User Tài khoản & Nút Đăng xuất */}
+        <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-sm font-semibold text-sky-400 border border-slate-700 shrink-0">
+              {((session?.user?.username || session?.user?.name || currentUser || 'U') as string).charAt(0).toUpperCase()}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-xs font-semibold text-slate-200 truncate">{session?.user?.username || session?.user?.name || "User Console"}</p>
+              <p className="text-[10px] text-slate-500 truncate">{session?.user?.email || currentUser}</p>
+            </div>
           </div>
-          <div className="overflow-hidden">
-            <p className="text-xs font-semibold text-slate-200 truncate">{session?.user?.username || session?.user?.name || "User Console"}</p>
-            <p className="text-[10px] text-slate-500 truncate">{session?.user?.email || currentUser}</p>
-          </div>
+          <button
+            onClick={handleLogout}
+            className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 shrink-0"
+            title="Đăng xuất"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       </aside>
 
@@ -261,7 +327,7 @@ export default function TasklistDashboard() {
               className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/80 rounded pl-9 pr-3 py-1.5 text-xs transition focus:outline-none text-slate-200 placeholder-slate-500"
             />
           </div>
-          <button 
+          <button
             onClick={() => {
               queryClient.invalidateQueries({ queryKey: ['tasks'] });
               queryClient.invalidateQueries({ queryKey: ['filtersSummary'] });
@@ -300,11 +366,10 @@ export default function TasklistDashboard() {
                 <div
                   key={task.id}
                   onClick={() => setSelectedTask(task)}
-                  className={`p-4 cursor-pointer transition relative ${
-                    isSelected 
-                      ? 'bg-slate-900/80 border-l-4 border-amber-500' 
-                      : 'hover:bg-slate-900/40'
-                  }`}
+                  className={`p-4 cursor-pointer transition relative ${isSelected
+                    ? 'bg-slate-900/80 border-l-4 border-amber-500'
+                    : 'hover:bg-slate-900/40'
+                    }`}
                 >
                   <div className="flex justify-between items-start gap-2">
                     <span className="font-semibold text-sm text-slate-200">{task.name}</span>
@@ -332,13 +397,12 @@ export default function TasklistDashboard() {
                       </span>
                     )}
                     {/* Badge Trạng thái nghiệp vụ hiện tại */}
-                    <span className={`text-[10px] px-2 py-0.5 rounded border font-medium ${
-                      task.variables?.Status === 'APPROVED' 
-                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                        : task.variables?.Status === 'REJECTED'
+                    <span className={`text-[10px] px-2 py-0.5 rounded border font-medium ${task.variables?.Status === 'APPROVED'
+                      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                      : task.variables?.Status === 'REJECTED'
                         ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
                         : 'bg-slate-800 text-slate-400 border-slate-700'
-                    }`}>
+                      }`}>
                       {task.variables?.Status || 'PENDING'}
                     </span>
                   </div>
@@ -447,7 +511,7 @@ export default function TasklistDashboard() {
                 <X size={16} />
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-800 bg-slate-950/20">
               <DynamicTaskForm
                 mode="SUBMIT"
