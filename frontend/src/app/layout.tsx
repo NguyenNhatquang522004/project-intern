@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SessionProvider } from 'next-auth/react';
+import NextAuthProvider from './context/NextAuthProvider';
 import { Toaster } from 'sonner';
 import '@/app/globals.css';
 
@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="bg-slate-950" >
-        <SessionProvider>
+        <NextAuthProvider>
           <QueryClientProvider client={queryClient}>
             {children}
             <Toaster
@@ -38,7 +38,7 @@ export default function RootLayout({
               }}
             />
           </QueryClientProvider>
-        </SessionProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

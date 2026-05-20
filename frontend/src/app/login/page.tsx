@@ -23,7 +23,7 @@ const forgotPasswordSchema = z.object({
 type LoginData = z.infer<typeof loginSchema>;
 type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
 
-const API_URL = "http://localhost:8081/api/v1/public";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1/public";
 
 export default function LoginPage() {
   const [view, setView] = useState<"login" | "forgot">("login");
@@ -73,7 +73,7 @@ export default function LoginPage() {
     try {
       const response = await axios.post(`${API_URL}/reset-password`, {
         email: data.email,
-        clientId: "orchestration",
+        clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "orchestration",
         redirectUri: window.location.origin || "http://localhost:3000",
       });
 
@@ -183,9 +183,17 @@ export default function LoginPage() {
                 </>
               )}
             </button>
-            
+
+            <button
+              type="button"
+              onClick={() => signIn('keycloak')}
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 border border-slate-700 rounded-xl text-slate-100 hover:bg-slate-800 transition-all duration-200"
+            >
+              Đăng nhập bằng Keycloak
+            </button>
+
             <p className="text-center text-sm text-slate-400 mt-6">
-              Chưa có tài khoản?{" "}
+              Chưa có tài khoản?{' '}
               <Link href="/register" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
                 Đăng ký ngay
               </Link>
@@ -230,7 +238,7 @@ export default function LoginPage() {
                 </>
               )}
             </button>
-            
+
             <button
               type="button"
               onClick={() => setView("login")}

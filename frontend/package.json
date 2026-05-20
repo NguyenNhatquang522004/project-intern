@@ -4,8 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-   "dev:app-a": "cross-env PORT=3000 NEXT_PUBLIC_APP_ID=app-a NEXT_PUBLIC_IDP_URL=http://localhost:18080/ NEXT_PUBLIC_CALLBACK_URL=http://localhost:3000/api/auth/callback next dev",
-  "dev:app-b": "cross-env PORT=4000 NEXT_PUBLIC_APP_ID=app-b NEXT_PUBLIC_IDP_URL=http://localhost:18080/ NEXT_PUBLIC_CALLBACK_URL=http://localhost:4000/api/auth/callback next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -15,6 +13,7 @@
     "@tanstack/react-query": "^5.100.10",
     "axios": "^1.16.1",
     "clsx": "^2.1.1",
+    "keycloak-js": "^26.2.4",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "next-auth": "^4.24.14",

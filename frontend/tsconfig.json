@@ -38,9 +38,11 @@
     ".next-app-a/types/**/*.ts",
     ".next-app-a/dev/types/**/*.ts",
     ".next-app-b/types/**/*.ts",
-    ".next-app-b/dev/types/**/*.ts"
+    ".next-app-b/dev/types/**/*.ts",
+    ".next-default/types/**/*.ts",
+    ".next-default/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
   ]
-}
+} 
