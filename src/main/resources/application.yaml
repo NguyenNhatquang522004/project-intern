@@ -107,7 +107,7 @@ logging:
   level:
     root: INFO
     com.nhatquang.demo: DEBUG
-    io.camunda.zeebe.client: WARN
+    io.camunda.zeebe.client: OFF
     org.hibernate.SQL: INFO
   pattern:
     # Định dạng Console cho Developer dễ đọc

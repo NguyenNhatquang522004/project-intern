@@ -73,7 +73,7 @@ export default function LoginPage() {
     try {
       const response = await axios.post(`${API_URL}/reset-password`, {
         email: data.email,
-        clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "orchestration",
+        clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "cammuda-client",
         redirectUri: window.location.origin || "http://localhost:3000",
       });
 
@@ -183,10 +183,9 @@ export default function LoginPage() {
                 </>
               )}
             </button>
-
             <button
               type="button"
-              onClick={() => signIn('keycloak')}
+              onClick={() => signIn('keycloak', { callbackUrl: '/' })}
               className="w-full flex items-center justify-center gap-2 py-3.5 px-4 border border-slate-700 rounded-xl text-slate-100 hover:bg-slate-800 transition-all duration-200"
             >
               Đăng nhập bằng Keycloak

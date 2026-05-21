@@ -48,6 +48,7 @@ export async function refreshAccessToken(token: any) {
  */
 export const authOptions: NextAuthOptions = {
     secret: process.env.NEXTAUTH_SECRET,
+    debug: true,
     providers: [
         // Keycloak OIDC Provider (SSO)
         KeycloakProvider({
@@ -55,10 +56,16 @@ export const authOptions: NextAuthOptions = {
             clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || 'sl9EiYyFEvzqsJonqhLlreJM2kbovtjp',
             issuer: KEYCLOAK_ISSUER,
             authorization: {
+                url: `${KEYCLOAK_ISSUER}/protocol/openid-connect/auth`,
                 params: {
-                    scope: 'openid profile email `offline_access`',
+                    scope: 'openid profile email offline_access',
                 },
             },
+            // 2. Cấu hình cho Server Next.js gọi ngầm đổi mã CODE lấy TOKEN (Bắt buộc phải có)
+            token: `${KEYCLOAK_ISSUER}/protocol/openid-connect/token`,
+
+            // 3. Cấu hình cho Server Next.js gọi ngầm lấy thông tin Profile User (Bắt buộc phải có)
+            userinfo: `${KEYCLOAK_ISSUER}/protocol/openid-connect/userinfo`,
         }),
         // Credentials Provider (Email + Password)
         CredentialsProvider({
@@ -123,6 +130,7 @@ export const authOptions: NextAuthOptions = {
             if (user) {
                 token.id = user.id;
                 token.accessToken = (user as any).accessToken || account?.access_token;
+                console.log('JWT Callback - Initial token:', token);
                 token.idToken = (user as any).idToken || account?.id_token;
                 token.refreshToken = (user as any).refreshToken || account?.refresh_token;
                 token.expiresAt = (user as any).expiresAt || account?.expires_at;

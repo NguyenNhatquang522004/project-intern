@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSession, signOut } from 'next-auth/react';
+import LogoutButton from '@/components/LogoutButton';
 
 export default function TasklistDashboard() {
   const { data: session, status } = useSession();
@@ -301,6 +302,7 @@ export default function TasklistDashboard() {
               <p className="text-[10px] text-slate-500 truncate">{session?.user?.email || currentUser}</p>
             </div>
           </div>
+             <LogoutButton />
           <button
             onClick={handleLogout}
             className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 shrink-0"

@@ -19,13 +19,11 @@ export default function LogoutButton() {
         const postLogoutRedirectUri = encodeURIComponent(window.location.origin);
 
         if (idToken) {
-            // Nếu lấy được idToken thành công -> Ép Keycloak logout im lặng không hỏi lại
             window.location.href = `${KEYCLOAK_LOGOUT_URL}?id_token_hint=${idToken}&post_logout_redirect_uri=${postLogoutRedirectUri}`;
         } else {
-            // Phương án dự phòng nếu không tìm thấy idToken
-            const clientId = "cammuda-client";
-            window.location.href = `${KEYCLOAK_LOGOUT_URL}?client_id=${clientId}&post_logout_redirect_uri=${postLogoutRedirectUri}`;
+            window.location.href = `${KEYCLOAK_LOGOUT_URL}?client_id=cammuda-client&post_logout_redirect_uri=${postLogoutRedirectUri}`;
         }
+
     };
     return (
         <button
@@ -37,4 +35,5 @@ export default function LogoutButton() {
             Đăng xuất
         </button>
     );
+
 }
